@@ -4,7 +4,7 @@ from datetime import datetime;
 #user enter
 user_input = input("Введите +доход или -расход: ")
 today = datetime.now().date().strftime('%d-%m-%Y')
-
+expence_categories = {'1':"Еда",'2':"Коммуналка",'3':"Лекарства",'4':"Развлечения",'5':"Прочее"}
 
 #input validation
 if user_input.startswith("+"):
@@ -23,7 +23,6 @@ if user_input.startswith("+"):
 
             elif earning_input == "нет":
                 #add to reserve
-                #add income entry to the log
                 comment = input("Ваш комментарий: ")
                 with open("data/budget_log.txt","r+") as f:
                     counter = sum(1 for _ in f) - 1
@@ -41,13 +40,13 @@ elif user_input.startswith("-"):
         if expence_input not in ("1", "2", "3", "4", "5"):
             print("Введенное значение неверно.")
         else: 
+            category = expence_categories.get(expence_input)
             comment = input("Ваш комментарий: ")
             with open("data/budget_log.txt","r+") as f:
                 counter = sum(1 for _ in f) - 1
-                f.write(f"|{counter:^5}|{today:^15}|{user_input:^11}|'category':^11| {comment}\n")    
+                f.write(f"|{counter:^5}|{today:^15}|{user_input:^11}|{category: ^19}| {comment}\n")    
                 print("Расход распределен в резервы и налоги")
                 break
-    #expence_input add to the log
     #expence_input subtract from budget_state
 
 else: 
