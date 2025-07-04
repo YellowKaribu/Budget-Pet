@@ -227,7 +227,7 @@ def money_operations() -> None:
                 )
             log_user_operacion(raw_input, "-", comment)
             earning_add(ip_answer, raw_input)
-            wait_for_command(MENU_START_TEXT, MENU_OPTIONS)
+            return
 
         elif raw_input.startswith("-"):
             user_category = input(
@@ -241,7 +241,7 @@ def money_operations() -> None:
                 )
             log_user_operacion(raw_input, user_category, comment)
             expense_add(raw_input)
-            wait_for_command(MENU_START_TEXT, MENU_OPTIONS)
+            return
         else:
             print(
                 "----------------------\n"
@@ -260,7 +260,9 @@ def state_operations():
     pass
 
 def exit_program() -> None:
-    '''Exit the program with a farewell message.'''
+    '''Exit the program with a farewell message.
+    :return: None - it`s just exit from programm.
+    '''
 
     print(
         "----------------------\n"
@@ -281,7 +283,8 @@ def wait_for_command(prompt: str, expected: dict[str, Callable]) -> str:
     valid user command and each value is the function to be called when that 
     command is selected. By using this dictionary-based structure, you can 
     easily change or extend the available commands by modifying the dictionary 
-    alone, without changing this function.
+    alone, without changing this function. The dictionaries are located above 
+    the main function.
     """
     valid_inputs = list(expected.keys())
     while True:
