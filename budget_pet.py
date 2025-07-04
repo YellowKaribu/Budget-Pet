@@ -142,9 +142,9 @@ def earning_add(answer: str, money: str) -> None:
     to be convertible to Decimal).
     :return: None - updates state file in place.
 
-    If the income is related to individual entrepreneurship ("yes"), 20% of 
-    the amount is added to the tax reserve, and 80% to the general reserve.
-    If not ("no"), 100% of the amount is added to the general reserve.
+    If the income is related to individual entrepreneurship ("yes"), add 
+    20% of the amount to the tax, and 80% to the reserve.
+    If not ("no"), add 100% of the amount to the reserve.
     '''
     while True:
         if answer == "yes":
@@ -177,25 +177,6 @@ def earning_add(answer: str, money: str) -> None:
                 "----------------------\n"
                 "Ответ на ИП-вопрос некорректен."
                 )
-
-
-def menu_question() -> None:
-    '''Wait for the user to enter 'menu' to return to the main menu.
-    
-    :return: None - blocks until user explicitly types 'menu'.
-
-    Prompts the user for input. Continues asking until the user enters 'menu'.
-    Used to pause the program flow between operations.
-    '''
-
-    while True:
-        user_input = input(
-            "----------------------\n"
-            "Для возвращения в меню введите menu\n"
-            "Для новой денежной операции введите next: "
-        ).strip()  
-        if user_input == "menu":
-            break
 
 def money_operations() -> None:
     """Main loop, handle user-entered operations in an interactive loop.
@@ -246,16 +227,7 @@ def money_operations() -> None:
                 )
             log_user_operacion(raw_input, "-", comment)
             earning_add(ip_answer, raw_input)
-
-            user_input = input(
-                "----------------------\n"
-                "Для возвращения в меню введите menu\n"
-                "Для новой денежной операции введите что угодно: "
-                ).strip()  
-            if user_input == "menu":
-                break
-            else:
-                continue
+            wait_for_command(MENU_START_TEXT, MENU_OPTIONS)
 
         elif raw_input.startswith("-"):
             user_category = input(
@@ -269,13 +241,7 @@ def money_operations() -> None:
                 )
             log_user_operacion(raw_input, user_category, comment)
             expense_add(raw_input)
-            user_input = input(
-                "----------------------\n"
-                "Для возвращения в меню введите menu\n"
-                "Для новой денежной операции введите что угодно"
-                ).strip()  
-            if user_input == "menu":
-                break
+            wait_for_command(MENU_START_TEXT, MENU_OPTIONS)
         else:
             print(
                 "----------------------\n"
@@ -296,7 +262,10 @@ def state_operations():
 def exit_program() -> None:
     '''Exit the program with a farewell message.'''
 
-    print("Выход из программы. До свидания!")
+    print(
+        "----------------------\n"
+        "Выход из программы. До свидания!"    
+    )
     sys.exit()
 
 def wait_for_command(prompt: str, expected: dict[str, Callable]) -> str:
@@ -320,7 +289,10 @@ def wait_for_command(prompt: str, expected: dict[str, Callable]) -> str:
         if user_input in valid_inputs:
             return user_input
         else:
-            print("----------------------\nНеверный ввод. Попробуйте ещё раз.")
+            print(
+                "----------------------\n"
+                "Неверный ввод. Попробуйте ещё раз."
+            )
 
 MENU_OPTIONS = {
     "add": money_operations,
