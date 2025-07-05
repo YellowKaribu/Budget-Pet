@@ -2,7 +2,7 @@
 from datetime import datetime;
 import json
 from decimal import Decimal, InvalidOperation
-from typing import Callable #for dicts
+from typing import Callable, Literal
 import sys #for sys.exit()
 
 
@@ -15,14 +15,6 @@ EXPENSE_CATEGORIES = {
     "4": "Развлечения",
     "5": "Прочее"
     }
-MENU_START_TEXT = (
-    "----------------------\n"
-    "Введите add, чтобы добавить расход/доход.\n"
-    "Введите balance, чтобы посмотреть текущее состояние финансов "
-    "(ВРЕМЕННО НЕ РАБОТАЕТ)\n"
-    "Введите exit, чтобы закрыть программу\n"
-    "Ваш ввод: "
-)
 MESSAGES = {
     "info_operation_logged": "Операция проведена и записана в лог",
     "error_input_invalid": "Ввод неверен.",
@@ -47,13 +39,26 @@ MESSAGES = {
 
 MESSAGE_SEPARATOR = "----------------------"
 
-def notify(key: str) -> None:
+def notify(message_key:
+        Literal[
+        "info_operation_logged",
+        "error_input_invalid",
+        "prompt_income_ip",
+        "prompt_operation_type",
+        "error_zero_amount",
+        "prompt_comment",
+        "prompt_expense_category",
+        "info_exit_message",
+        "prompt_start_menu_text"
+        ]
+    ) -> None:
     """Print text from MESSAGES dictionary.
 
     :param: str - key from MESSAGE dictionary.
     :return: None - just prints a message.
     """
-    message = MESSAGES.get(key, f"Unknown message key: {key}")
+
+    message = MESSAGES.get(message_key, f"Unknown message key: {message_key}")
     print(MESSAGE_SEPARATOR)
     print(message)
 
@@ -77,10 +82,7 @@ def log_user_operacion(raw_input: str, category: str, comment: str) -> None:
                           raw_input, 
                           category, 
                           comment)
-    print(
-        "----------------------\n"
-        "Операция проведена и записана в лог"
-    )
+    notify("info_operation_logged")
 
 def write_line_in_logfile(
     log_file: str, 
@@ -93,7 +95,7 @@ def write_line_in_logfile(
     """Write a line in the log file with user input parameters.
 
     :param log_file: str - path to the log file.
-    :param count: str - number of operacion.
+    :param count: int - number of operacion.
     :param today_date: str - today date which is counts with separate function.
     :param money_input: str - user input representing an amount and what it is 
     - expence or earning (e.g. "-500").
@@ -132,21 +134,16 @@ def get_today_date() -> str:
 def ip_question() -> bool:
     '''Ask user if the income is from individual entrepreneurship.
 
-    :return: str - answer yes or no as string.
+    :return: bool - answer yes or no as string.
     '''
 
     valid_answers = {"да": True, "нет": False}
     while True:
-        user_input = input(
-            "----------------------\n"
-            "Доход с ИП? Да/нет: "
-            ).strip().lower()
+        notify("prompt_income_ip")
+        user_input = input().strip().lower()
         if user_input in valid_answers:
             return valid_answers[user_input]
-        print(
-                "----------------------\n"
-                "Ввод неверен."
-                )
+        notify("error_input_invalid")
 
 def expense_add(money: str) -> None:
     '''Subtract the expense amount from the free balance in the state file.
@@ -205,10 +202,7 @@ def earning_add(answer: bool, money: str) -> None:
                 json.dump(state, f, indent=4)
             break
         else: 
-            print(
-                "----------------------\n"
-                "Ответ на ИП-вопрос некорректен."
-                )
+            notify("error_input_invalid")
 
 def money_operations() -> None:
     """Main loop, handle user-entered operations in an interactive loop.
@@ -225,12 +219,8 @@ def money_operations() -> None:
     - Allows the user to return to the main menu at any time by typing 'menu'.
     """
     while True:
-        raw_input = input(
-            "----------------------\n"
-            "Чтобы ввести доход, введите +сумма \n" 
-            "Чтобы ввести расход, введите -сумма \n" 
-            "Чтобы выйти в главное меню, введите menu: "
-        ).strip().lower()
+        notify("prompt_operation_type")
+        raw_input = input().strip().lower()
 
         if raw_input == "menu":
             break
@@ -238,47 +228,31 @@ def money_operations() -> None:
         try:
             amount = Decimal(raw_input)
         except InvalidOperation:
-            print(
-                "----------------------\n"
-                "Введите число со знаком - или +, иные символы недопустимы."
-                )
+            notify("error_input_invalid")
             continue
 
         if amount == 0:
-            print(
-                "----------------------\n"
-                "Сумма ввода не может быть равна 0"
-                )
+            notify("error_zero_amount")
             continue
         
         elif raw_input.startswith("+"):
             ip_answer = ip_question()
-            comment = input(
-                "----------------------\n"
-                "Введите комментарий: "
-                )
+            notify("prompt_comment")
+            comment = input().strip()
             log_user_operacion(raw_input, "-", comment)
             earning_add(ip_answer, raw_input)
             return
 
         elif raw_input.startswith("-"):
-            user_category = input(
-                "----------------------\n"
-                "Укажите категорию расхода. 1 - еда, 2 - коммуналка, " \
-                "3 - лекарства, 4 - развлечения, 5 - прочее: "
-                )
-            comment = input(
-                "----------------------\n"
-                "Введите комментарий: "
-                )
+            notify("prompt_expense_category")
+            user_category = input().strip()
+            notify("prompt_comment")
+            comment = input()
             log_user_operacion(raw_input, user_category, comment)
             expense_add(raw_input)
             return
         else:
-            print(
-                "----------------------\n"
-                "Поставьте + или - перед суммой"
-            )
+            notify("error_input_invalid")
             continue
 
 def state_operations():
@@ -296,16 +270,18 @@ def exit_program() -> None:
     :return: None - it`s just exit from programm.
     '''
 
-    print(
-        "----------------------\n"
-        "Выход из программы. До свидания!"    
-    )
+    notify("info_exit_message")
     sys.exit()
 
-def wait_for_command(prompt: str, expected: dict[str, Callable]) -> str:
+def wait_for_command(
+        prompt_key:
+        Literal[
+            "prompt_start_menu_text"
+        ], expected: dict[str, Callable]) -> str:
     """Prompt the user until a valid command is entered.
 
-    :param prompt: str - Text displayed to the user before input.
+    :param prompt_key: str - key from the MESSAGES dictionary that defines 
+    which message to show before asking for user input.
     :param expected: dict[str, Callable] - A dictionary of valid command 
     strings mapped to callable functions.
     :return: str - The user's input if it matches one of the expected command 
@@ -320,14 +296,12 @@ def wait_for_command(prompt: str, expected: dict[str, Callable]) -> str:
     """
     valid_inputs = list(expected.keys())
     while True:
-        user_input = input(prompt).strip().lower()
+        notify(prompt_key)
+        user_input = input().strip().lower()
         if user_input in valid_inputs:
             return user_input
         else:
-            print(
-                "----------------------\n"
-                "Неверный ввод. Попробуйте ещё раз."
-            )
+            notify("error_input_invalid")
 
 MENU_OPTIONS = {
     "add": money_operations,
@@ -341,7 +315,7 @@ def main() -> None:
     :return: None - runs until terminated by the user (e.g., Ctrl+C).
     '''
     while True:
-        choice_key = wait_for_command(MENU_START_TEXT, MENU_OPTIONS)
+        choice_key = wait_for_command("prompt_start_menu_text", MENU_OPTIONS)
         user_choice = MENU_OPTIONS[choice_key]
         user_choice()
 
