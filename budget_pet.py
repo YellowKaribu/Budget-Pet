@@ -96,22 +96,21 @@ def get_today_date() -> str:
     '''
     return datetime.now().date().strftime('%d-%m-%Y')
 
-def ip_question() -> str:
+def ip_question() -> bool:
     '''Ask user if the income is from individual entrepreneurship.
 
     :return: str - answer yes or no as string.
     '''
+
+    valid_answers = {"да": True, "нет": False}
     while True:
         user_input = input(
             "----------------------\n"
-            "Доход с ИП? Ответ должен быть в формате + или -: "
-            ).strip()
-        if user_input == "+":
-            return "yes"
-        elif user_input == "-":
-            return "no"
-        else: 
-            print(
+            "Доход с ИП? Да/нет: "
+            ).strip().lower()
+        if user_input in valid_answers:
+            return valid_answers[user_input]
+        print(
                 "----------------------\n"
                 "Ввод неверен."
                 )
@@ -133,7 +132,7 @@ def expense_add(money: str) -> None:
             break
 
 
-def earning_add(answer: str, money: str) -> None:
+def earning_add(answer: bool, money: str) -> None:
     '''Distribute income between reserve and tax in state file.
 
     :param answer: str - user response to whether the income is from individual 
@@ -147,7 +146,7 @@ def earning_add(answer: str, money: str) -> None:
     If not ("no"), add 100% of the amount to the reserve.
     '''
     while True:
-        if answer == "yes":
+        if answer == True:
             with open(STATE_FILE,"r") as f:
                 state = json.load(f)
                 decimal_money = Decimal(money)
@@ -163,7 +162,7 @@ def earning_add(answer: str, money: str) -> None:
                 json.dump(state, f, indent=4)
             break
 
-        elif answer == "no":
+        elif answer == False:
             with open(STATE_FILE,"r") as f:
                 state = json.load(f)
                 decimal_money = Decimal(money)
