@@ -23,6 +23,39 @@ MENU_START_TEXT = (
     "Введите exit, чтобы закрыть программу\n"
     "Ваш ввод: "
 )
+MESSAGES = {
+    "info_operation_logged": "Операция проведена и записана в лог",
+    "error_input_invalid": "Ввод неверен.",
+    "prompt_income_ip": "Доход с ИП? Да/нет: ",
+    "prompt_operation_type": 
+        "Чтобы ввести доход, введите +сумма \n" 
+        "Чтобы ввести расход, введите -сумма \n" 
+        "Чтобы выйти в главное меню, введите menu: ",
+    "error_zero_amount": "Сумма ввода не может быть равна 0",
+    "prompt_comment": "Введите комментарий: ",
+    "prompt_expense_category": 
+        "Укажите категорию расхода. 1 - еда, 2 - коммуналка, " \
+        "3 - лекарства, 4 - развлечения, 5 - прочее: ",
+    "info_exit_message": "Выход из программы. До свидания!",
+    "prompt_start_menu_text": 
+        "Введите add, чтобы добавить расход/доход.\n"
+        "Введите balance, чтобы посмотреть текущее состояние финансов "
+        "(ВРЕМЕННО НЕ РАБОТАЕТ)\n"
+        "Введите exit, чтобы закрыть программу\n"
+        "Ваш ввод: ",
+}
+
+MESSAGE_SEPARATOR = "----------------------"
+
+def notify(key: str) -> None:
+    """Print text from MESSAGES dictionary.
+
+    :param: str - key from MESSAGE dictionary.
+    :return: None - just prints a message.
+    """
+    message = MESSAGES.get(key, f"Unknown message key: {key}")
+    print(MESSAGE_SEPARATOR)
+    print(message)
 
 def log_user_operacion(raw_input: str, category: str, comment: str) -> None:
     """Append a formatted user operation to the log file and print 
