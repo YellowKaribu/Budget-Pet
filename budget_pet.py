@@ -4,6 +4,8 @@ import json
 from decimal import Decimal, InvalidOperation
 from typing import Callable, Literal
 import sys #for sys.exit()
+from functools import wraps
+from typing import TextIO
 
 
 LOG_FILE = "data/budget_log.txt"
@@ -39,6 +41,80 @@ MESSAGES = {
 
 MESSAGE_SEPARATOR = "----------------------"
 
+# === File access decorators ===
+def open_state_file_r(func):
+    """Open the state file in read mode.
+
+    :param func: the function that will receive the opened file object.
+    :return: a wrapper function that handles file opening and calls
+    the decorated function.
+    """
+    def wrapper():
+        with open(STATE_FILE, "r") as f:
+            return func(f)
+    return wrapper
+
+
+def open_state_file_w(func):
+    """Open the state file in write mode.
+
+    :param func: The function that will receive the opened file object.
+    :return: A wrapper function that handles file opening and calls 
+    the decorated function.
+    """
+    def wrapper(*args, **kwargs):
+        with open(STATE_FILE, "w") as f:
+            return func(f, *args, **kwargs)
+    return wrapper
+
+
+# === Income/Expense Operations == #
+def expense_add(expense_amount: str) -> None:
+    """Subtract the expense amount from free state.
+    
+    :param expense_amount: str - expense amount entered by user.
+    :return: None - modifies the state file in place.
+    """
+    free_state = get_free_state()
+    updated_state = subtract_expense_from_state(free_state, expense_amount)
+    save_state_to_file(updated_state)
+
+
+def subtract_expense_from_state(free_state, expense_amount) -> dict:
+    """Subtract expense amount from current free balance in state file.
+
+    :param free_state: dict - free state dictionary from state file.
+    :param expense_amount: str - user prompt like "-500".
+    :return: dict - new free state after subtract operation.
+    """
+    free_state_decimal = Decimal(free_state["free"])
+    absolute_expense_decimal = abs(Decimal(expense_amount))
+    free_state["free"] = str(free_state_decimal - absolute_expense_decimal) 
+    return free_state
+
+
+@open_state_file_r
+def get_free_state(state_file: TextIO) -> dict:
+    """Load free state from JSON state file.
+
+    :param state_file: opened file object provided by the decorator.
+    :return: dict - free state as dictionary from JSON state file.
+    """
+    return json.load(state_file)
+
+
+@open_state_file_w
+def save_state_to_file(state_file: TextIO, updated_state: dict) -> None:
+    """Save updated free balance to the JSON state file.
+
+    :param state_file: opened file object provided by the decorator.
+    :param updated_state: dict - new free balance after expense operation.
+    :return: None - modify state file only.
+    """
+    json.dump(updated_state, state_file, indent=4)
+
+
+# === Messages ang logging ===
 def notify(message_key:
         Literal[
         "info_operation_logged",
