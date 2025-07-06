@@ -221,22 +221,6 @@ def ip_question() -> bool:
             return valid_answers[user_input]
         notify("error_input_invalid")
 
-def expense_add(money: str) -> None:
-    '''Subtract the expense amount from the free balance in the state file.
-    
-    :param money: str - expense amount entered by user.
-    :return: None - modifies the state file in place.
-    '''
-    while True:
-        with open(STATE_FILE, "r") as f:
-            state = json.load(f)
-            free_state = Decimal(state["free"])
-            money_decimal = abs(Decimal(money))
-            state["free"] = str(free_state - money_decimal)
-        with open(STATE_FILE, "w") as f:
-            json.dump(state, f, indent=4)
-            break
-
 
 def earning_add(answer: bool, money: str) -> None:
     '''Distribute income between reserve and tax in state file.
