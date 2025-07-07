@@ -8,109 +8,80 @@ from functools import wraps
 from typing import TextIO
 
 
-LOG_FILE = "data/budget_log.txt"
-STATE_FILE = "data/budget_state.json"
-EXPENSE_CATEGORIES = {
+TRANSACTION_LOG_FILE = "data/budget_log.txt"
+BUDGET_STATE_FILE = "data/budget_state.json"
+EXPENSE_CATEGORY = {
     "1": "Еда",
     "2": "Коммуналка",
     "3": "Лекарства",
     "4": "Развлечения",
     "5": "Прочее"
     }
-MESSAGES = {
-    "info_operation_logged": "Операция проведена и записана в лог",
-    "error_input_invalid": "Ввод неверен.",
-    "prompt_income_ip": "Доход с ИП? Да/нет: ",
-    "prompt_operation_type": 
-        "Чтобы ввести доход, введите +сумма \n" 
-        "Чтобы ввести расход, введите -сумма \n" 
-        "Чтобы выйти в главное меню, введите menu: ",
-    "error_zero_amount": "Сумма ввода не может быть равна 0",
-    "prompt_comment": "Введите комментарий: ",
+USER_MESSAGES = {
+    "info_operation_logged": "Операция успешно записана.",
+    "error_input_invalid": "Неверный ввод данных.",
+    "prompt_income_individual_entrepreneurship": "Доход от ИП? Да/нет: ",
+    "prompt_operation_type":
+        "Введите +сумма для дохода, -сумма для расхода, menu для выхода: ",
+    "error_zero_amount": "Сумма не может быть нулевой.",
+    "prompt_comment": "Введите комментарий к операции: ",
     "prompt_expense_category": 
-        "Укажите категорию расхода. 1 - еда, 2 - коммуналка, " \
-        "3 - лекарства, 4 - развлечения, 5 - прочее: ",
-    "info_exit_message": "Выход из программы. До свидания!",
+        "Выберите категорию расхода. 1-еда, 2-коммуналка, " \
+        "3-лекарства, 4-развлечения, 5-прочее: ",
+    "info_exit_message": "Программа завершена. До свидания!",
     "prompt_start_menu_text": 
-        "Введите add, чтобы добавить расход/доход.\n"
-        "Введите balance, чтобы посмотреть текущее состояние финансов "
-        "(ВРЕМЕННО НЕ РАБОТАЕТ)\n"
-        "Введите exit, чтобы закрыть программу\n"
-        "Ваш ввод: ",
+        "Выберите: add (добавить расход/доход), balance "\
+        "(просмотреть состояние), exit (выйти)\nВаш выбор: "
 }
 
 MESSAGE_SEPARATOR = "----------------------"
 
 # === File access decorators ===
-def open_state_file_r(func):
-    """Open the state file in read mode.
-
-    :param func: the function that will receive the opened file object.
-    :return: a wrapper function that handles file opening and calls
-    the decorated function.
-    """
+def open_budget_file_r(func):
+    """Open the budget file in read mode."""
     def wrapper():
-        with open(STATE_FILE, "r") as f:
+        with open(BUDGET_STATE_FILE, "r") as f:
             return func(f)
     return wrapper
 
 
-def open_state_file_w(func):
-    """Open the state file in write mode.
-
-    :param func: The function that will receive the opened file object.
-    :return: A wrapper function that handles file opening and calls 
-    the decorated function.
-    """
+def open_budget_file_w(func):
+    """Open the budget file in write mode."""
     def wrapper(*args, **kwargs):
-        with open(STATE_FILE, "w") as f:
+        with open(BUDGET_STATE_FILE, "w") as f:
             return func(f, *args, **kwargs)
     return wrapper
 
 
 # === Income/Expense Operations == #
-def expense_add(expense_amount: str) -> None:
-    """Subtract the expense amount from free state.
-    
-    :param expense_amount: str - expense amount entered by user.
-    :return: None - modifies the state file in place.
+def add_expense(expense_amount: str) -> None:
+    """Subtract the expense amount from available funds state."""
+
+    current_available_state = get_current_available_state()
+    updated_state = subtract_expense(current_available_state, expense_amount)
+    save_available_state(updated_state)
+
+
+def subtract_expense(available_funds_state, expense_amount) -> dict:
+    """Subtract expense amount from current available funds balance in state file.
+
+    :return: dict - new available funds state after subtract operation.
     """
-    free_state = get_free_state()
-    updated_state = subtract_expense_from_state(free_state, expense_amount)
-    save_state_to_file(updated_state)
-
-
-def subtract_expense_from_state(free_state, expense_amount) -> dict:
-    """Subtract expense amount from current free balance in state file.
-
-    :param free_state: dict - free state dictionary from state file.
-    :param expense_amount: str - user prompt like "-500".
-    :return: dict - new free state after subtract operation.
-    """
-    free_state_decimal = Decimal(free_state["free"])
+    available_funds_decimal = Decimal(available_funds_state["available_funds"])
     absolute_expense_decimal = abs(Decimal(expense_amount))
-    free_state["free"] = str(free_state_decimal - absolute_expense_decimal) 
-    return free_state
+    available_funds_state["available_funds"] = str(available_funds_decimal - absolute_expense_decimal) 
+    return available_funds_state
 
 
-@open_state_file_r
-def get_free_state(state_file: TextIO) -> dict:
-    """Load free state from JSON state file.
-
-    :param state_file: opened file object provided by the decorator.
-    :return: dict - free state as dictionary from JSON state file.
-    """
+@open_budget_file_r
+def get_current_available_state(state_file: TextIO) -> dict:
+    """Load available funds state from JSON state file."""
     return json.load(state_file)
 
 
-@open_state_file_w
-def save_state_to_file(state_file: TextIO, updated_state: dict) -> None:
-    """Save updated free balance to the JSON state file.
-
-    :param state_file: opened file object provided by the decorator.
-    :param updated_state: dict - new free balance after expense operation.
-    :return: None - modify state file only.
-    """
+@open_budget_file_w
+def save_available_state(state_file: TextIO, updated_state: dict) -> None:
+    """Save updated available funds balance to the JSON state file."""
     json.dump(updated_state, state_file, indent=4)
 
 
@@ -119,7 +90,7 @@ def notify(message_key:
         Literal[
         "info_operation_logged",
         "error_input_invalid",
-        "prompt_income_ip",
+        "prompt_income_individual_entrepreneurship",
         "prompt_operation_type",
         "error_zero_amount",
         "prompt_comment",
@@ -128,43 +99,32 @@ def notify(message_key:
         "prompt_start_menu_text"
         ]
     ) -> None:
-    """Print text from MESSAGES dictionary.
+    """Print text from MESSAGES dictionary."""
 
-    :param: str - key from MESSAGE dictionary.
-    :return: None - just prints a message.
-    """
-
-    message = MESSAGES.get(message_key, f"Unknown message key: {message_key}")
+    message = USER_MESSAGES.get(message_key, f"Unknown message key: {message_key}")
     print(MESSAGE_SEPARATOR)
     print(message)
 
-def log_user_operacion(raw_input: str, category: str, comment: str) -> None:
+def log_financial_operation(raw_input: str, category: str, comment: str) -> None:
     """Append a formatted user operation to the log file and print 
-    confirmation message.
+    confirmation message."""
 
-    :param raw_input: str - user input representing an amount, with a sign 
-    indicating expense or earning (e.g. "-500").
-    :param category: str - user input number representing the expense category.
-    :param comment: str - optional user comment to describe the operation.
-    :return: None - write to log file and print a confirmation message.
-    """
+    today = get_current_date()
+    operation_id = get_last_operation_id(TRANSACTION_LOG_FILE)
 
-    today = get_today_date()
-    counter = get_log_line_number(LOG_FILE)
-
-    write_line_in_logfile(LOG_FILE, 
-                          counter, 
+    write_log_record(TRANSACTION_LOG_FILE, 
+                          operation_id, 
                           today, 
                           raw_input, 
                           category, 
                           comment)
     notify("info_operation_logged")
 
-def write_line_in_logfile(
+def write_log_record(
     log_file: str, 
     count: int, 
-    today_date: str, 
-    money_input: str, 
+    operation_date: str, 
+    transaction_amount: str, 
     category: str, 
     comment: str
 ) -> None:
@@ -172,8 +132,8 @@ def write_line_in_logfile(
 
     :param log_file: str - path to the log file.
     :param count: int - number of operacion.
-    :param today_date: str - today date which is counts with separate function.
-    :param money_input: str - user input representing an amount and what it is 
+    :param operation_date: str - today date which is counts with separate function.
+    :param transaction_amount: str - user input representing an amount and what it is 
     - expence or earning (e.g. "-500").
     :param category: str - user input as number indicating the expense category 
     (e.g. "food").
@@ -183,63 +143,48 @@ def write_line_in_logfile(
     """
     
     with open(log_file, "a") as f:
-        category_name = EXPENSE_CATEGORIES.get(category, "")
+        category_name = EXPENSE_CATEGORY.get(category, "")
         f.write(f"|{count:^5}|"
-                f"{today_date:^15}|"
-                f"{money_input:^11}|"
+                f"{operation_date:^15}|"
+                f"{transaction_amount:^11}|"
                 f"{category_name:^19}| "
                 f"{comment}\n")
 
-def get_log_line_number(log_file: str) -> int:
+def get_last_operation_id(log_file: str) -> int:
     """Count the number of lines in the log file and determine the operation 
-    number.
-
-    :param log_file: str - path to the log file.
-    :return: int - number of user operation.
-    """
+    number. """
     with open(log_file, "r") as f:
         return sum(1 for _ in f) - 1
 
-def get_today_date() -> str:
-    '''Get today date.
-    
-    :return: str - today date.
-    '''
+def get_current_date() -> str:
+    '''Get today date.'''
+
     return datetime.now().date().strftime('%d-%m-%Y')
 
-def ip_question() -> bool:
-    '''Ask user if the income is from individual entrepreneurship.
+def ask_individual_entrepreneurship_status() -> bool:
+    '''Ask user if the income is from individual entrepreneurship.'''
 
-    :return: bool - answer yes or no as string.
-    '''
-
-    valid_answers = {"да": True, "нет": False}
+    valid_responses = {"да": True, "нет": False}
     while True:
-        notify("prompt_income_ip")
-        user_input = input().strip().lower()
-        if user_input in valid_answers:
-            return valid_answers[user_input]
+        notify("prompt_income_individual_entrepreneurship")
+        user_response = input().strip().lower()
+        if user_response in valid_responses:
+            return valid_responses[user_response]
         notify("error_input_invalid")
 
 
-def earning_add(answer: bool, money: str) -> None:
+def add_income(is_individual_entrepreneurship: bool, income_amount: str) -> None:
     '''Distribute income between reserve and tax in state file.
-
-    :param answer: str - user response to whether the income is from individual 
-    entrepreneurship ("yes" or "no").
-    :param money: str - the total income amount entered by the user (expected 
-    to be convertible to Decimal).
-    :return: None - updates state file in place.
-
+    
     If the income is related to individual entrepreneurship ("yes"), add 
     20% of the amount to the tax, and 80% to the reserve.
     If not ("no"), add 100% of the amount to the reserve.
     '''
     while True:
-        if answer == True:
-            with open(STATE_FILE,"r") as f:
+        if is_individual_entrepreneurship == True:
+            with open(BUDGET_STATE_FILE,"r") as f:
                 state = json.load(f)
-                decimal_money = Decimal(money)
+                decimal_money = Decimal(income_amount)
                 percent20 = Decimal("0.2")
                 percent80 = Decimal("0.8")
                 reserve_state = Decimal(state["reserve"])
@@ -248,36 +193,25 @@ def earning_add(answer: bool, money: str) -> None:
                 state["reserve"] = str(reserve_state + decimal_money * 
                                        percent80)
                 state["taxes"] = str(taxes_state + decimal_money * percent20)
-            with open(STATE_FILE, "w") as f:
+            with open(BUDGET_STATE_FILE, "w") as f:
                 json.dump(state, f, indent=4)
             break
 
-        elif answer == False:
-            with open(STATE_FILE,"r") as f:
+        elif is_individual_entrepreneurship == False:
+            with open(BUDGET_STATE_FILE,"r") as f:
                 state = json.load(f)
-                decimal_money = Decimal(money)
+                decimal_money = Decimal(income_amount)
                 reserve_state2 = Decimal(state["reserve"])
                 state["reserve"] = str(reserve_state2 + decimal_money)
-            with open(STATE_FILE, "w") as f:
+            with open(BUDGET_STATE_FILE, "w") as f:
                 json.dump(state, f, indent=4)
             break
         else: 
             notify("error_input_invalid")
 
-def money_operations() -> None:
-    """Main loop, handle user-entered operations in an interactive loop.
+def handle_user_financial_operations() -> None:
+    """Process user financial transactions in an interactive loop."""
 
-    :return: None - runs interactively until the user exits to menu.
-
-    Accepts user input in the format "+amount" for earnings or "-amount" for 
-    expenses.
-    - Validates the input as a signed decimal number.
-    - For income, asks if it is from individual entrepreneurship, logs it, 
-    and distributes funds.
-    - For expenses, asks for a category and comment, logs it, and subtracts 
-    from the balance.
-    - Allows the user to return to the main menu at any time by typing 'menu'.
-    """
     while True:
         notify("prompt_operation_type")
         raw_input = input().strip().lower()
@@ -296,11 +230,11 @@ def money_operations() -> None:
             continue
         
         elif raw_input.startswith("+"):
-            ip_answer = ip_question()
+            individual_entrepreneurship_answer = ask_individual_entrepreneurship_status()
             notify("prompt_comment")
             comment = input().strip()
-            log_user_operacion(raw_input, "-", comment)
-            earning_add(ip_answer, raw_input)
+            log_financial_operation(raw_input, "-", comment)
+            add_income(individual_entrepreneurship_answer, raw_input)
             return
 
         elif raw_input.startswith("-"):
@@ -308,53 +242,38 @@ def money_operations() -> None:
             user_category = input().strip()
             notify("prompt_comment")
             comment = input()
-            log_user_operacion(raw_input, user_category, comment)
-            expense_add(raw_input)
+            log_financial_operation(raw_input, user_category, comment)
+            add_expense(raw_input)
             return
         else:
             notify("error_input_invalid")
             continue
 
-def state_operations():
-    """Run the secondary main loop for working with the account state.
-
-    :return: None - to be implemented.
-
-    This function will handle non-transactional state operations, such as 
-    reviewing, adjusting, or resetting the balance and reserves.
-    """    
+def display_financial_state():
+    """Run the secondary main loop for working with the account state."""    
     pass
 
-def exit_program() -> None:
-    '''Exit the program with a farewell message.
-    :return: None - it`s just exit from programm.
-    '''
+def exit_application() -> None:
+    '''Exit the application with a farewell message.'''
 
     notify("info_exit_message")
     sys.exit()
 
-def wait_for_command(
+def wait_for_user_command(
         prompt_key:
         Literal[
             "prompt_start_menu_text"
-        ], expected: dict[str, Callable]) -> str:
+        ], valid_commands: dict[str, Callable]) -> str:
     """Prompt the user until a valid command is entered.
 
     :param prompt_key: str - key from the MESSAGES dictionary that defines 
     which message to show before asking for user input.
-    :param expected: dict[str, Callable] - A dictionary of valid command 
+    :param valid_commands: dict[str, Callable] - A dictionary of valid command 
     strings mapped to callable functions.
     :return: str - The user's input if it matches one of the expected command 
     keys, intended for use in calling the corresponding function.
-
-    This function takes an input prompt and a dictionary where each key is a 
-    valid user command and each value is the function to be called when that 
-    command is selected. By using this dictionary-based structure, you can 
-    easily change or extend the available commands by modifying the dictionary 
-    alone, without changing this function. The dictionaries are located above 
-    the main function.
     """
-    valid_inputs = list(expected.keys())
+    valid_inputs = list(valid_commands.keys())
     while True:
         notify(prompt_key)
         user_input = input().strip().lower()
@@ -364,20 +283,18 @@ def wait_for_command(
             notify("error_input_invalid")
 
 MENU_OPTIONS = {
-    "add": money_operations,
-    "balance": state_operations,
-    "exit": exit_program
+    "add": handle_user_financial_operations,
+    "balance": display_financial_state,
+    "exit": exit_application
 }
 
 def main() -> None:
-    '''Start the main program loop and route user to available actions.
+    '''Run the main application loop and route user actions.'''
 
-    :return: None - runs until terminated by the user (e.g., Ctrl+C).
-    '''
     while True:
-        choice_key = wait_for_command("prompt_start_menu_text", MENU_OPTIONS)
-        user_choice = MENU_OPTIONS[choice_key]
-        user_choice()
+        user_choice = wait_for_user_command("prompt_start_menu_text", MENU_OPTIONS)
+        action = MENU_OPTIONS[user_choice]
+        action()
 
 if __name__ == "__main__":
     main()
