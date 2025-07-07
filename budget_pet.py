@@ -6,6 +6,7 @@ from typing import Callable, Literal
 import sys #for sys.exit()
 from functools import wraps
 from typing import TextIO
+from dataclasses import dataclass
 
 
 TRANSACTION_LOG_FILE = "data/budget_log.txt"
@@ -36,6 +37,16 @@ USER_MESSAGES = {
 
 MESSAGE_SEPARATOR = "----------------------"
 
+@dataclass
+class LogEntry:
+    log_file: str
+    operation_id: int
+    operation_date: str
+    operation_amount: str
+    category: str
+    comment: str
+
+
 # === File access decorators ===
 def open_budget_file_r(func):
     """Open the budget file in read mode."""
@@ -50,6 +61,13 @@ def open_budget_file_w(func):
     def wrapper(*args, **kwargs):
         with open(BUDGET_STATE_FILE, "w") as f:
             return func(f, *args, **kwargs)
+    return wrapper
+
+def open_log_file_a(func):
+    """Open the log file in append mode."""
+    def wrapper(log_entry):
+        with open(log_entry.log_file, "a") as f:
+            return func(log_entry, f)
     return wrapper
 
 
@@ -105,50 +123,32 @@ def notify(message_key:
     print(MESSAGE_SEPARATOR)
     print(message)
 
-def log_financial_operation(raw_input: str, category: str, comment: str) -> None:
-    """Append a formatted user operation to the log file and print 
-    confirmation message."""
+def log_financial_operation(raw_input: str, raw_category: str, raw_comment: str) -> None:
+    """Record a financial operation in the log file and confirm to user."""
 
-    today = get_current_date()
-    operation_id = get_last_operation_id(TRANSACTION_LOG_FILE)
+    current_date = get_current_date()
+    last_operation_id = get_last_operation_id(TRANSACTION_LOG_FILE)
+    log_entry = LogEntry(
+        log_file = TRANSACTION_LOG_FILE,
+        operation_id = last_operation_id,
+        operation_date = current_date,
+        operation_amount = raw_input,
+        category = raw_category,
+        comment = raw_comment
+    )
 
-    write_log_record(TRANSACTION_LOG_FILE, 
-                          operation_id, 
-                          today, 
-                          raw_input, 
-                          category, 
-                          comment)
+    write_log_record(log_entry)
     notify("info_operation_logged")
 
-def write_log_record(
-    log_file: str, 
-    count: int, 
-    operation_date: str, 
-    transaction_amount: str, 
-    category: str, 
-    comment: str
-) -> None:
-    """Write a line in the log file with user input parameters.
-
-    :param log_file: str - path to the log file.
-    :param count: int - number of operacion.
-    :param operation_date: str - today date which is counts with separate function.
-    :param transaction_amount: str - user input representing an amount and what it is 
-    - expence or earning (e.g. "-500").
-    :param category: str - user input as number indicating the expense category 
-    (e.g. "food").
-    :param comment: str - optional user comment to describe the operation 
-    (e.g. "lunch").
-    :return: None - write a line to log file
-    """
-    
-    with open(log_file, "a") as f:
-        category_name = EXPENSE_CATEGORY.get(category, "")
-        f.write(f"|{count:^5}|"
-                f"{operation_date:^15}|"
-                f"{transaction_amount:^11}|"
-                f"{category_name:^19}| "
-                f"{comment}\n")
+@open_log_file_a
+def write_log_record(log_entry: LogEntry, file_handle: TextIO) -> None:
+    """Write a line in the log file with user input parameters."""
+    category_name = EXPENSE_CATEGORY.get(log_entry.category, "")
+    file_handle.write(f"|{log_entry.operation_id:^5}|"
+            f"{log_entry.operation_date:^15}|"
+            f"{log_entry.operation_amount:^11}|"
+            f"{category_name:^19}| "
+            f"{log_entry.comment}\n")
 
 def get_last_operation_id(log_file: str) -> int:
     """Count the number of lines in the log file and determine the operation 
