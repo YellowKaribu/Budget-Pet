@@ -50,36 +50,7 @@ class UserCancelledError(Exception):
     pass
 
 
-class UserMessages(TypedDict):
-    info_operation_logged: str
-    info_exit_message: str
-    info_operation_cancelled: str
-    error_input_invalid: str
-    error_zero_amount: str
-    prompt_individual_entrepreneurship: str
-    prompt_operation_type: str
-    prompt_transaction_amount: str
-    prompt_comment: str
-    prompt_expense_category: str
-    prompt_start_menu_text: str
-
-#for IDE autocomplete
-MessageKey = Literal[
-    "info_operation_logged",
-    "info_exit_message",
-    "info_operation_cancelled",
-    "error_input_invalid",
-    "error_zero_amount",
-    "prompt_individual_entrepreneurship",
-    "prompt_operation_type",
-    "prompt_transaction_amount",
-    "prompt_comment",
-    "prompt_expense_category",
-    "prompt_start_menu_text"
-]
-
-
-USER_MESSAGES: UserMessages = {
+USER_MESSAGES = {
     "info_operation_logged": "Операция успешно записана.",
     "info_exit_message": "Программа завершена. До свидания!",
     "info_operation_cancelled": "Операция отменена. Возврат в меню.",
@@ -129,7 +100,7 @@ def get_valid_category_prompt() -> str:
         category = EXPENSE_CATEGORY.get(key)
         if category:
             return category
-        notify(USER_MESSAGES.get("error_input_invalid"))
+        notify(USER_MESSAGES["error_input_invalid"])
 
 
 def ask_transaction_comment() -> str:
@@ -140,15 +111,15 @@ def ask_transaction_comment() -> str:
 def ask_transaction_amount() -> str:
     """Prompt user for a transaction amount and validate it."""
     while True:
-        user_input = input(USER_MESSAGES.get("prompt_transaction_amount")).strip()
+        user_amount = user_input(USER_MESSAGES["prompt_transaction_amount"])
         try:
-            amount = Decimal(user_input)
+            amount = Decimal(user_amount)
             if amount <= 0:
-                notify(USER_MESSAGES.get("error_zero_amount"))
+                notify(USER_MESSAGES["error_zero_amount"])
                 continue
             return str(amount)
         except InvalidOperation:
-            notify(USER_MESSAGES.get("error_input_invalid"))
+            notify(USER_MESSAGES["error_input_invalid"])
 
 
 def ask_transaction_category(type: TransactionType) -> str:
@@ -165,7 +136,7 @@ def choose_tax_status() -> TransactionType:
                 return TransactionType.INCOME_WITH_TAX
             case "нет": 
                 return TransactionType.INCOME_NO_TAX
-            case _: notify(USER_MESSAGES.get("error_input_invalid"))
+            case _: notify(USER_MESSAGES["error_input_invalid"])
             
 
 def ask_transaction_type() -> TransactionType:
@@ -182,14 +153,12 @@ def ask_transaction_type() -> TransactionType:
         elif user_input_type == "-":
             return TransactionType.EXPENSE
         else:
-            notify(USER_MESSAGES.get("error_input_invalid"))
+            notify(USER_MESSAGES["error_input_invalid"])
     
 
 # === Notification and Input/Output ===
-def notify(message_key: str) -> None:
+def notify(message: str) -> None:
     """Print text from MESSAGES dictionary."""
-
-    message = USER_MESSAGES.get(message_key, f"Unknown message key: {message_key}")
     print(MESSAGE_SEPARATOR)
     print(message)
 
@@ -200,7 +169,7 @@ def wait_for_user_command():
         if user_choice in MENU_OPTIONS:
             return user_choice
         else:
-            notify(USER_MESSAGES.get("error_input_invalid"))
+            notify(USER_MESSAGES["error_input_invalid"])
 
 
 def user_input(prompt: str) -> str:
@@ -261,7 +230,7 @@ def log_transaction(transaction_details: LogEntry, file_handle: TextIO) -> None:
 def exit_application() -> None:
     '''Exit the application with a farewell message.'''
 
-    notify(USER_MESSAGES.get("info_exit_message"))
+    notify(USER_MESSAGES["info_exit_message"])
     sys.exit()
 
 
@@ -353,9 +322,9 @@ def run_transaction() -> None:
         details = collect_transaction_details()
         process_transaction(details)
         log_transaction(details)
-        notify(USER_MESSAGES.get("info_operation_logged")) 
+        notify(USER_MESSAGES["info_operation_logged"]) 
     except UserCancelledError:
-        notify(USER_MESSAGES.get("info_operation_cancelled"))
+        notify(USER_MESSAGES["info_operation_cancelled"])
 
 
 def handle_balance_operations():
