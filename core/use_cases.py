@@ -66,7 +66,6 @@ def parse_transaction_input(transaction_data: TransactionInputData) -> ParsedTra
     return ParsedTransaction(type=tr_type.value, amount=new_amount)
 
 
-
 def collect_transaction_data(input_port: TransactionInputPort) -> TransactionInputData:
     tr_type = input_port.prompt_transaction_type()
     tr_tax_status = None
