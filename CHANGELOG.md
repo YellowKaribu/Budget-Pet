@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.2] - 
+
+### Fix
+- Fixed extra text in user messages caused by incorrect argument type passed to notify()
+- Fixed non-working cancel command when entered as transaction amount
+
+## Add
+- Users can now enter transaction amounts using either the European format (1,2) or the Russian format (1.2).
+- Support for transaction input cancellation by user: "отмена"
+
 ---
 
 ## [0.1.1] - 08-07-2025

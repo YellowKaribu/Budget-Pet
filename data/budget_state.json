@@ -1,6 +1,6 @@
 {
-    "reserve": "2133.0",
-    "available_funds": "-2632",
-    "rent": "0",
-    "taxes": "500.0"
+  "reserve": "1800.0",
+  "available_funds": "0",
+  "rent": "0",
+  "taxes": "200.0"
 }
