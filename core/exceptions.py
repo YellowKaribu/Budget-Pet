@@ -1,0 +1,2 @@
+class CancelledTransaction (Exception):
+    pass
