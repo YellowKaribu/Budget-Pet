@@ -66,7 +66,6 @@ def parse_transaction_input(transaction_data: TransactionInputData) -> ParsedTra
     return ParsedTransaction(type=tr_type.value, amount=new_amount)
 
 
-
 def collect_transaction_data(input_port: TransactionInputPort) -> TransactionInputData:
     tr_type = input_port.prompt_transaction_type()
     tr_tax_status = None
@@ -93,31 +92,3 @@ def handle_balance():
 
 def exit_app():
     pass
-
-
-def apply_income_with_tax(budget_state: dict, transaction: LogEntry) -> dict:
-    amount = Decimal(transaction.operation_amount)
-    budget_state["reserve"] = str(Decimal(budget_state["reserve"]) + amount * Decimal(TaxRate.RESERVE.value))
-    budget_state["taxes"] = str(Decimal(budget_state["taxes"]) + amount * Decimal(TaxRate.TAX.value))
-    return budget_state
-
-def apply_income_no_tax(budget_state: dict, transaction: LogEntry) -> dict:
-    amount = Decimal(transaction.operation_amount)
-    budget_state["reserve"] = str(Decimal(budget_state["reserve"]) + amount)
-    return budget_state
-
-def apply_expense(budget_state: dict, transaction: LogEntry) -> dict:
-    amount = Decimal(transaction.operation_amount)
-    budget_state["available_funds"] = str(Decimal(budget_state["available_funds"]) - amount)
-    return budget_state
-
-def process_transaction_type(current_state: dict, transaction: LogEntry) -> dict:
-    handlers = {
-        TransactionType.INCOME_WITH_TAX.value: apply_income_with_tax,
-        TransactionType.INCOME_NO_TAX.value: apply_income_no_tax,
-        TransactionType.EXPENSE.value: apply_expense
-    }
-    handler = handlers.get(transaction.operation_type)
-    if not handler:
-        raise ValueError(f"Unsupported transaction type: {transaction.operation_type}")
-    return handler(current_state, transaction)
