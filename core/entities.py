@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
+from decimal import Decimal
 
 @dataclass
 class LogEntry:
@@ -36,3 +37,8 @@ class BudgetState():
     available_funds: str
     rent: str
     taxes: str
+
+@dataclass
+class ParsedTransaction():
+    type: str
+    amount: Decimal

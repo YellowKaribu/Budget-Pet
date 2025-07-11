@@ -9,7 +9,7 @@ USER_MESSAGES = {
     "ERR_EMPTY_INPUT": "Ошибка: пустой ввод.",
     "ERR_INPUT_NOT_A_NUMBER":"Пожалуйста, введите число.",
     "PROMPT_INDIVIDUAL_ENTREPRENEURSHIP": "Доход от ИП? Да/нет: ",      
-    "PROMPT_TRANSACTION_TYPE": "Чтобы отменить транзакцию, введите cancel в любой момент"\
+    "PROMPT_TRANSACTION_TYPE": "Чтобы отменить транзакцию, введите 'отмена' в любой момент\n"\
         "Введите + для дохода, - для расхода: ",
     "PROMPT_AMOUNT": "Введите сумму транзакции: ",
     "PROMPT_COMMENT": "Введите комментарий к операции: ",
@@ -29,4 +29,5 @@ EXPENSE_CATEGORY = {
     "4": "Развлечения",
     "5": "Прочее"
     }
-BUDGET_STATE = "data/budget_state.json" 
+BUDGET_STATE = "data/budget_state.json"
+TRANSACTIONS_LOG_PATH = "data/transactions.jsonl"
