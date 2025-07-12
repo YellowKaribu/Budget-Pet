@@ -6,7 +6,7 @@ class CliNotifierAdapter(NotifierPort):
         print(f"{message}")
     
 
-    def show_log_record(self, logs: list[dict]) -> None:
+    def show_log_record(self, logs: list[dict], expense_category) -> None:
         display_names = {
             "id": "ID",
             "date": "Дата",
@@ -23,7 +23,7 @@ class CliNotifierAdapter(NotifierPort):
                 if key in entry:
                     value = entry[key]
                     if key == "category":
-                        value = EXPENSE_CATEGORY.get(value, "")
+                        value = expense_category.get(value, "")
                     parts.append(f"{display}: {value}")
             if parts:
                 print(f"{i:02d}. " + " | ".join(parts))
