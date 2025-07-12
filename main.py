@@ -5,7 +5,8 @@ from adapters.transaction_log_jsonl_adapter import TransactionsLoggerJsonl
 from core.use_cases import (
     orchestrate_transaction,
     collect_transaction_data,
-    show_transactions_log
+    show_transactions_log,
+    show_budget_balance
     )
 from core.exceptions import CancelledTransaction
 from config.messages import get_msg_transaction_cancelled
@@ -34,6 +35,10 @@ def main():
             except CancelledTransaction:
                 print(get_msg_transaction_cancelled())
                 continue
+
+        elif choice == "2":
+            show_budget_balance(output_budget_port, notifier_port)
+            continue
             
             orchestrate_transaction(output_budget_port, output_log_port, notifier_port, tr_data)
         elif choice == "3":

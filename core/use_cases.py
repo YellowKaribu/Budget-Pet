@@ -97,5 +97,6 @@ def handle_balance():
     pass
 
 
-def exit_app():
-    pass
+def show_budget_balance(output_budget_port: BudgetStatePort, notifier_port: NotifierPort):
+    budget_state = output_budget_port.get_state()
+    notifier_port.show_budget_state(budget_state)
