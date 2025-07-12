@@ -2,8 +2,11 @@ from adapters.cli_input_adapter import CLIInputAdapter
 from adapters.budget_state_json_adapter import BudgetStateAdapter
 from adapters.cli_output_adapter import CliNotifierAdapter
 from adapters.transaction_log_jsonl_adapter import TransactionsLoggerJsonl
-from core.use_cases import orchestrate_transaction
-from core.use_cases import collect_transaction_data
+from core.use_cases import (
+    orchestrate_transaction,
+    collect_transaction_data,
+    show_transactions_log
+    )
 from core.exceptions import CancelledTransaction
 from config.messages import get_msg_transaction_cancelled
 
@@ -29,9 +32,15 @@ def main():
                 tr_data = collect_transaction_data(input_port)
             except CancelledTransaction:
                 print(get_msg_transaction_cancelled())
-                return None
+                continue
             
             orchestrate_transaction(output_budget_port, output_log_port, notifier_port, tr_data)
+        elif choice == "3":
+            try:
+                show_transactions_log(output_log_port, notifier_port)
+            except CancelledTransaction:
+                print(get_msg_transaction_cancelled())
+                continue
 
         elif choice == "выход":
             print("Выход из программы.")
