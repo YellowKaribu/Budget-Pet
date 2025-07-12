@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.2] - 
+## [0.2.0] - 
 
 ### Fix
 - Fixed extra text in user messages caused by incorrect argument type passed to notify()
@@ -9,6 +9,12 @@
 ## Add
 - Users can now enter transaction amounts using either the European format (1,2) or the Russian format (1.2).
 - Support for transaction input cancellation by user: "отмена"
+- Implemented CLI option to display transaction log via notifier port.
+- Added CLI menu option for exiting the program.
+- Added labeled display of `BudgetState` fields in CLI output for improved readability.
+
+### Refactored
+- Transitioned to a monolithic hexagonal architecture to isolate core logic and enabling easier addition of new modules in the future (e.g., MySQL as a database, web servers, etc.).
 
 ---
 
