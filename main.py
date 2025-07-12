@@ -9,6 +9,7 @@ from core.use_cases import (
     )
 from core.exceptions import CancelledTransaction
 from config.messages import get_msg_transaction_cancelled
+import sys
 
 def main():
     input_port = CLIInputAdapter()
@@ -42,9 +43,9 @@ def main():
                 print(get_msg_transaction_cancelled())
                 continue
 
-        elif choice == "выход":
+        elif choice == "0":
             print("Выход из программы.")
-            continue
+            sys.exit()
         else:
             print("Неверный ввод. Пожалуйста, выберите существующий пункт.")
 
