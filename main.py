@@ -35,12 +35,12 @@ def main():
             except CancelledTransaction:
                 print(get_msg_transaction_cancelled())
                 continue
-
+            orchestrate_transaction(output_budget_port, output_log_port, notifier_port, tr_data)
+            
         elif choice == "2":
             show_budget_balance(output_budget_port, notifier_port)
             continue
             
-            orchestrate_transaction(output_budget_port, output_log_port, notifier_port, tr_data)
         elif choice == "3":
             try:
                 show_transactions_log(output_log_port, notifier_port)
