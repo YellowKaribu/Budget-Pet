@@ -1,10 +1,12 @@
 from ports.output_port import NotifierPort
 from config.config import EXPENSE_CATEGORY
+from core.entities import BudgetState
+from dataclasses import asdict
 
 class CliNotifierAdapter(NotifierPort):
     def notify_success(self, message: str) -> None:
         print(f"{message}")
-    
+
 
     def show_log_record(self, logs: list[dict], expense_category) -> None:
         display_names = {
@@ -29,3 +31,20 @@ class CliNotifierAdapter(NotifierPort):
                 print(f"{i:02d}. " + " | ".join(parts))
             else:
                 print(f"{i:02d}. Запись не содержит известных полей: {entry}")
+
+
+    def show_budget_state(self, budget_state: BudgetState) -> None:
+        display_names = {
+        "reserve": "1. Резерв",
+        "available_funds": "2. Свободные средства",
+        "rent": "3. Аренда",
+        "taxes": "4. Отложено на налоги"
+        }
+
+        state = asdict(budget_state)
+        print ("Ваш текущий баланс:\n")
+        for key, value in state.items():
+            label = display_names.get(key, key)
+            print(f"{label}: {value}")
+
+
