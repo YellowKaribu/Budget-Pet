@@ -89,7 +89,7 @@ def collect_transaction_data(input_port: TransactionInputPort) -> TransactionInp
 
 def show_transactions_log(log_port: TransactionsLogPort, notify_port: NotifierPort):
     log_record = log_port.get_transaction_log()
-    notify_port.show_log_record(log_record)
+    notify_port.show_log_record(log_record, EXPENSE_CATEGORY)
 
 
 

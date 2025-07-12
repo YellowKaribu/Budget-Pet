@@ -13,7 +13,7 @@ class BudgetStatePort(Protocol):
 class NotifierPort(Protocol):
     def notify_success(self, message: str) -> None:
         ...
-    def show_log_record(self, logs: list[dict]) -> None:
+    def show_log_record(self, logs: list[dict], expense_category) -> None:
         ...
 
 
