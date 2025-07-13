@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1] -
+
+### Add
+- Monthly event processing logic via `check_monthly_events`
+
+
+---
+
 ## [0.2.0] - 
 
 ### Fix
