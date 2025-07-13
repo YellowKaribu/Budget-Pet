@@ -5,6 +5,17 @@
 ### Add
 - Monthly event processing logic via `check_monthly_events`
 
+### Changed
+- Replaced hexagonal architecture with a flat CLI-based structure.
+- Split responsibilities between `application.py` (business logic) and `infrastructure.py` (data operations).
+- Simplified entry point: `main.py` now directly calls application logic.
+- Extracted user messages and constants into dedicated modules: `messages.py` and `constants.py`.
+- Consolidated input/output handling in `cli.py` for CLI display and prompts.
+- Refactored domain models and enums into `models.py`.
+- Reworked monthly events check and transaction orchestration logic.
+
+### Removed
+- Removed ports, adapters, and abstractions from hexagonal architecture, which were unnecessary for a small CLI tool.
 
 ---
 
