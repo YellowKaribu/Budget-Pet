@@ -1,5 +1,3 @@
-MESSAGE_SEPARATOR = "----------------------"
-#if you change a key, don't forget to change it in messages.py also.
 USER_MESSAGES = {
     "MSG_SUCCESS_LOGGED": "Операция успешно записана.",
     "MSG_EXIT": "Программа завершена. До свидания!",
@@ -29,5 +27,6 @@ EXPENSE_CATEGORY = {
     "4": "Развлечения",
     "5": "Прочее"
     }
-BUDGET_STATE = "data/budget_state.json"
-TRANSACTIONS_LOG_PATH = "data/transactions.jsonl"
+BUDGET_PATH = "budget_state.json"
+TRANSACTIONS_LOG_PATH = "transactions.jsonl"
+META_PATH = "meta.json"

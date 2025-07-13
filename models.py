@@ -3,8 +3,6 @@ from enum import Enum
 from typing import Optional
 from decimal import Decimal
 
-META_FILE = "data/meta.json"
-
 @dataclass
 class LogEntry:
     operation_type: str
@@ -13,7 +11,6 @@ class LogEntry:
     operation_amount: str
     category: str
     comment: str
-
 
 @dataclass
 class TransactionInputData:
@@ -44,3 +41,7 @@ class BudgetState():
 class ParsedTransaction():
     type: str
     amount: Decimal
+
+class CancelledTransaction (Exception):
+    pass
+
