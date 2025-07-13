@@ -2,11 +2,13 @@ from adapters.cli_input_adapter import CLIInputAdapter
 from adapters.budget_state_json_adapter import BudgetStateAdapter
 from adapters.cli_output_adapter import CliNotifierAdapter
 from adapters.transaction_log_jsonl_adapter import TransactionsLoggerJsonl
+from adapters.meta_file_adapter import MetaFileAdapter
 from core.use_cases import (
     orchestrate_transaction,
     collect_transaction_data,
     show_transactions_log,
-    show_budget_balance
+    show_budget_balance,
+    check_monthly_events
     )
 from core.exceptions import CancelledTransaction
 from config.messages import get_msg_transaction_cancelled
@@ -17,8 +19,9 @@ def main():
     output_budget_port = BudgetStateAdapter()
     output_log_port = TransactionsLoggerJsonl()
     notifier_port = CliNotifierAdapter()
+    meta_port = MetaFileAdapter()
 
-    
+    check_monthly_events(output_budget_port, meta_port, notifier_port)
 
     while True:
         print("\nВыберите действие:")

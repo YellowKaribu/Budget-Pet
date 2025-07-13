@@ -7,6 +7,16 @@ class CliNotifierAdapter(NotifierPort):
     def notify_success(self, message: str) -> None:
         print(f"{message}")
 
+    def notify_monthly_events(self, monthly_events_statuses: dict) -> None:
+        messages ={
+            "pay_rent_status": "29 число - день оплаты аренды.\n"\
+                "'Аренда' в балансе обнулена. Не забудьте заплатить арендодателю.\n"
+        }
+
+        for event_key, status in monthly_events_statuses.items():
+            if status:
+                message = messages.get(event_key, f"Событие {event_key} выполнено.")
+                print (message)
 
     def show_log_record(self, logs: list[dict], expense_category) -> None:
         display_names = {
@@ -32,7 +42,6 @@ class CliNotifierAdapter(NotifierPort):
             else:
                 print(f"{i:02d}. Запись не содержит известных полей: {entry}")
 
-
     def show_budget_state(self, budget_state: BudgetState) -> None:
         display_names = {
         "reserve": "1. Резерв",
@@ -46,5 +55,4 @@ class CliNotifierAdapter(NotifierPort):
         for key, value in state.items():
             label = display_names.get(key, key)
             print(f"{label}: {value}")
-
 

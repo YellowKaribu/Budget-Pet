@@ -7,13 +7,16 @@ class BudgetStatePort(Protocol):
         ...
 
     def save_state(self, updated_state) -> None:
-        pass
+        ...
 
 
 class NotifierPort(Protocol):
     def notify_success(self, message: str) -> None:
         ...
         
+    def notify_monthly_events(self, events_statuses: dict) -> None:
+        ...
+
     def show_log_record(self, logs: list[dict], expense_category) -> None:
         ...
 
@@ -27,4 +30,12 @@ class TransactionsLogPort(Protocol):
         ...
 
     def write_transaction_log(self, entry: dict) -> None:
+        ...
+
+
+class MetaFilePort(Protocol):
+    def get_meta_data(self, meta_file) -> dict:
+        ...
+    
+    def save_meta_data(self, meta_file, meta_data: dict) -> None:
         ...

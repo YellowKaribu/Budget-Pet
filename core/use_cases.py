@@ -1,12 +1,12 @@
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, date
 from dataclasses import replace, asdict
 from core.entities import (
-    LogEntry, TransactionType, TaxRate, 
+    TransactionType, META_FILE, 
     ParsedTransaction, BudgetState, TransactionInputData
 )
 from config.config import EXPENSE_CATEGORY
-from ports.output_port import BudgetStatePort, NotifierPort, TransactionsLogPort
+from ports.output_port import BudgetStatePort, NotifierPort, TransactionsLogPort, MetaFilePort
 from ports.input_port import TransactionInputPort
 
 
@@ -92,7 +92,6 @@ def show_transactions_log(log_port: TransactionsLogPort, notify_port: NotifierPo
     notify_port.show_log_record(log_record, EXPENSE_CATEGORY)
 
 
-
 def handle_balance():
     pass
 
@@ -100,3 +99,49 @@ def handle_balance():
 def show_budget_balance(output_budget_port: BudgetStatePort, notifier_port: NotifierPort):
     budget_state = output_budget_port.get_state()
     notifier_port.show_budget_state(budget_state)
+
+
+def check_monthly_events(
+        budget_state_port: BudgetStatePort, 
+        meta_port: MetaFilePort, 
+        notifier_port: NotifierPort
+        ):
+    pay_rent_status = False
+    meta_data = meta_port.get_meta_data(META_FILE)
+    today= date.today()
+
+    if should_pay_rent(today, meta_data):
+        pay_rent(budget_state_port, meta_port)
+        pay_rent_status = True
+    #later other events will be added
+
+    all_events_status = {"pay_rent_status": pay_rent_status}
+
+    #if at least 1 event happened, notify user
+    if any(all_events_status.values()):
+        notifier_port.notify_monthly_events(all_events_status)
+
+
+def should_pay_rent(today: date, meta_data: dict) -> bool:
+    last_rent_pay_str = meta_data["last_rent_pay"]
+    last_rent_pay = datetime.strptime(last_rent_pay_str, "%Y-%m-%d").date()
+
+    return (
+        today.day >= 13 and (last_rent_pay.month != today.month or 
+         last_rent_pay.year != today.year)
+        )
+
+
+def pay_rent(budget_state_port: BudgetStatePort, meta_port: MetaFilePort) -> None:
+    today = datetime.now().strftime("%Y-%m-%d")
+    meta_data = meta_port.get_meta_data(META_FILE)
+    #check if already reset
+    if meta_data.get("last_rent_pay") == today:
+        return
+
+    current_balance = budget_state_port.get_state()
+    updated_state = replace(current_balance, rent="0")
+    budget_state_port.save_state(updated_state)
+
+    meta_data["last_rent_pay"] = today
+    meta_port.save_meta_data(META_FILE, meta_data)
