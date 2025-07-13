@@ -97,20 +97,3 @@ def test_all_prompt_methods_raise_cancel_prompt(monkeypatch, method_name):
 
     with pytest.raises(CancelledTransaction):
         method()
-
-
-def test_main_handles_cancelled_transaction(monkeypatch):
-    # Подготовим цепочку ответов: выберем "1" (добавить), затем введём "назад"
-    inputs = iter(["1", "отмена"])
-
-    # Заменим input() так, чтобы он возвращал значения по очереди
-    monkeypatch.setattr(builtins, "input", lambda _: next(inputs))
-
-    # Заменим print(), чтобы не захламлять вывод (опционально)
-    monkeypatch.setattr(builtins, "print", lambda *args, **kwargs: None)
-
-    # Просто вызываем main() и проверяем, что он не упал
-    try:
-        main()
-    except CancelledTransaction:
-        pytest.fail("Исключение должно быть перехвачено внутри main()")

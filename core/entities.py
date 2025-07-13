@@ -3,6 +3,8 @@ from enum import Enum
 from typing import Optional
 from decimal import Decimal
 
+META_FILE = "data/meta.json"
+
 @dataclass
 class LogEntry:
     operation_type: str

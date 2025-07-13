@@ -4,10 +4,11 @@ from core.entities import TransactionInputData, ParsedTransaction, BudgetState
 from core.use_cases import (
     parse_transaction_input,
     apply_transaction_to_state,
-    build_log_entry
+    build_log_entry,
+    pay_rent
     )
 
-from datetime import datetime
+from datetime import datetime, date
 from adapters.transaction_log_jsonl_adapter import TransactionsLoggerJsonl
 
 def test_parse_valid_income():
@@ -104,5 +105,63 @@ def test_build_entry_log():
 
     except ValueError:
         pytest.fail("timestamp has incorrect format")
+
+
+class DummyBudgetStatePort():
+    def __init__(self, budget_state: BudgetState) -> None:
+        self.state = budget_state
+        self.saved_state = None
+
+    def get_state(self) -> BudgetState:
+        return self.state
+
+    def save_state(self, updated_state) -> None:
+        self.saved_state = updated_state
+  
+
+class DummyMetaFilePort():
+    def __init__(self, data: dict) -> None:
+        self.meta_data = data
+        self.saved_data = None
+
+    def get_meta_data(self, meta_file) -> dict:
+        return self.meta_data
+    
+    def save_meta_data(self, meta_file, meta_data: dict) -> None:
+        self.saved_data = meta_data
+
+
+def test_pay_rent() -> None:
+    """Tests the pay_rent function:
+    - Ensures the 'rent' field is reset to "0" while other budget fields remain unchanged.
+    - Updates the 'last_rent_pay' field in metadata to today's date.
+    - Confirms both budget state and metadata are correctly saved.
+    """
+    budget_state = BudgetState(
+        reserve="1000",
+        available_funds="1000",
+        rent="1000",
+        taxes="1000"
+    )
+
+    meta_state = {
+    "last_rent_pay": "",
+    "last_report_month": ""
+    }
+
+    budget_port = DummyBudgetStatePort(budget_state)
+    meta_port = DummyMetaFilePort(meta_state)
+
+    pay_rent(budget_port, meta_port)
+
+    assert budget_port.saved_state is not None
+    assert budget_port.saved_state.reserve == "1000"
+    assert budget_port.saved_state.available_funds == "1000"
+    assert budget_port.saved_state.rent == "0"
+    assert budget_port.saved_state.taxes == "1000"
+    assert meta_port.saved_data is not None
+    assert "last_rent_pay" in meta_port.saved_data
+    saved_date = datetime.strptime(meta_port.saved_data["last_rent_pay"], "%Y-%m-%d").date()
+    assert saved_date == date.today()
 
 
