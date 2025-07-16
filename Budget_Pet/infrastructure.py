@@ -38,7 +38,7 @@ def get_transaction_log() -> list[dict]:
         return entries
     
 
-def write_transaction_log(entry: dict) -> None:
+def add_transaction_log(entry: dict) -> None:
     with open(TRANSACTIONS_LOG_PATH, "a") as f:
         json.dump(entry, f)
         f.write("\n")
@@ -71,7 +71,10 @@ def validate_meta_data(data: Any) -> dict:
 def notify_monthly_events(statuses: dict[str, bool]) -> None:
     messages = {
         "pay_rent_status": "29 число — день оплаты аренды.\n" \
-        "'Аренда' в балансе обнулена. Не забудьте заплатить арендодателю.\n"
+        "'Аренда' в балансе обнулена. Не забудьте заплатить арендодателю.\n",
+        "make_monthly_calculations": "1 число, месячные пересчеты.\n" \
+        "Прошломесячный доход вычтен из резервов и добавлен в свободные деньги.\n" \
+        "810 из резерва перечислены в аренду. Убедитесь, что отложили деньги."
     }
     for key, value in statuses.items():
         if value:
