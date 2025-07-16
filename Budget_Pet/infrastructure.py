@@ -215,4 +215,4 @@ def notify_success() -> None:
 
 
 def notify_cancel() -> None:
-    print (get_msg_transaction_cancelled)
+    print (get_msg_transaction_cancelled())
