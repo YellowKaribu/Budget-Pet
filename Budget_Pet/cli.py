@@ -24,6 +24,7 @@ from infrastructure import (
 from application import (
     check_monthly_events,
     orchestrate_transaction,
+    get_last_month_expense_statistic
 )
 
 def main():
@@ -56,6 +57,10 @@ def main():
             except CancelledTransaction:
                 notify_cancel()
                 continue
+
+        elif choice == "4":
+            show_last_month_expense_statictic()
+            continue
 
         elif choice == "0":
             notify_exit()
@@ -95,3 +100,17 @@ def show_budget_balance():
     show_budget_state(budget_state)
 
 
+def show_last_month_expense_statictic() -> None:
+    raw_statistic = get_last_month_expense_statistic()
+    statistic_message = (
+    f"Траты за прошлый месяц:\n"
+    f"  Еда: {raw_statistic[0]}\n"
+    f"  Коммуналка: {raw_statistic[1]}\n"
+    f"  Лекарства: {raw_statistic[2]}\n"
+    f"  Игры: {raw_statistic[3]}\n"
+    f"  Другое: {raw_statistic[4]}\n"
+    "\n"
+    f"Всего: {raw_statistic[5]}"
+    )
+
+    print(statistic_message)

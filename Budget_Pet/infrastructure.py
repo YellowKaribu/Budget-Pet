@@ -202,6 +202,7 @@ def show_main_menu() -> None:
     print("1. Добавить транзакцию")
     print("2. Показать баланс")
     print("3. Показать лог операций")
+    print("4. Показать статистику расходов прошлого месяца")
     print("0. Выход")
 
 
@@ -219,3 +220,4 @@ def notify_success() -> None:
 
 def notify_cancel() -> None:
     print (get_msg_transaction_cancelled())
+
