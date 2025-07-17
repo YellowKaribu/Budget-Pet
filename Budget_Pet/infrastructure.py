@@ -3,6 +3,8 @@ from models import BudgetState, CancelledTransaction
 import json
 from dataclasses import asdict
 from typing import Any, Literal
+from datetime import datetime
+from decimal import Decimal
 
 from messages import(
     get_err_empty_input,
@@ -47,6 +49,40 @@ def add_transaction_log(entry: dict) -> None:
 def get_meta_data(path: str) -> dict:
     data = load_json(path)
     return validate_meta_data(data)
+
+
+def get_last_month_expense_statistic() -> tuple:
+    log_record = get_transaction_log()
+    today = datetime.today()
+
+    food_expense = Decimal("0")
+    bills_expense = Decimal("0")
+    drugs_expense = Decimal("0")
+    games_expense = Decimal("0")
+    other_expense = Decimal("0")
+
+    if today.month == 1:
+        target_month = 12
+    else:
+        target_month = today.month - 1
+
+    for tr in log_record:
+        tr_date = datetime.strptime(tr["timestamp"], "%d-%m-%Y %H:%M:%S")
+        if tr_date.month == target_month and tr["type"] == "expense":
+            if tr["category"] == 1:
+                food_expense += Decimal(str(tr["amount"]))
+            elif tr["category"] == 2:
+                bills_expense += Decimal(str(tr["amount"]))
+            elif tr["category"] == 3:
+                drugs_expense += Decimal(str(tr["amount"]))
+            elif tr["category"] == 4:
+                games_expense += Decimal(str(tr["amount"]))
+            elif tr["category"] == 5:
+                other_expense += Decimal(str(tr["amount"]))
+    
+    total_expense = food_expense + bills_expense + drugs_expense + games_expense + other_expense
+
+    return (food_expense, bills_expense, drugs_expense, games_expense, other_expense, total_expense)
 
 
 def save_meta_data(path: str, data: dict) -> None:
