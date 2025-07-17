@@ -6,6 +6,7 @@ from infrastructure import (
     get_state,
     get_transaction_log,
     get_meta_data,
+    get_last_month_expense_statistic,
     notify_monthly_events,
     prompt_tax_status,
     prompt_transaction_amount,
@@ -19,13 +20,12 @@ from infrastructure import (
     notify_invalid_choice,
     notify_success,
     notify_cancel
-)
+    )
 
 from application import (
     check_monthly_events,
-    orchestrate_transaction,
-    get_last_month_expense_statistic
-)
+    orchestrate_transaction
+    )
 
 def main():
     '''Entry point.'''
