@@ -146,8 +146,8 @@ def calculate_last_month_income() -> str:
 
     #parcing log file for previous transactions
     for tr in log_record:
-        tr_date = datetime.strptime(tr["timestamp"], "%Y-%m-%d %H:%M:%S")
-        if tr_date.year == target_year and tr_date.month == target_month:
+        tr_date = datetime.strptime(tr["timestamp"], "%d-%m-%Y %H:%M:%S")
+        if tr_date.year == target_year and tr_date.month == target_month and tr["type"] == "income":
             total += Decimal(str(tr["amount"]))
 
     return str(total)
