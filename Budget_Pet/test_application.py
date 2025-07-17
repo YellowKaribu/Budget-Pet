@@ -1,7 +1,7 @@
 import pytest
 from decimal import Decimal
 from datetime import datetime
-from application import calculate_last_month_income
+from application import calculate_last_month_income, get_transaction_log
 from dataclasses import dataclass
 
 def test_calculate_last_month_income(monkeypatch):
