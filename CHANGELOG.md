@@ -5,6 +5,9 @@
 ### Add
 - Monthly event processing logic via `check_monthly_events`: last month's income moved from reserve to available funds on 1, rent reset on 29, rent take from reserves on 1
 - Function `get_last_month_expense_statistic()` to calculate categorized expenses for the previous month
+- Added basic folder structure for frontend
+- Created initial HTML pages and base CSS styles
+
 
 ### Changed
 - Replaced hexagonal architecture with a flat CLI-based structure.
