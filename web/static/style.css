@@ -1,0 +1,130 @@
+body {
+    margin: 10vn;
+    padding: 20px;
+    background-color: #1e1e1e;
+    color: #b6b6b6;
+    font-family: sans-serif;
+    height: 100vh;
+}
+
+.header{
+    background-color: #181818;
+    height: 20vh;
+    padding: 10px;
+    
+}
+
+.footer{
+    background-color: #181818;
+    height: 20vh;
+    padding: 10px;
+}
+
+.main{
+    display: flex;
+    background-color: #2b2a2a;
+    padding: 12px;
+    font-size: 26px;
+}
+
+.main nav a {
+    text-decoration: None;
+    background-color: #1e1e1e;
+    color: #b6b6b6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    line-height: 70px;
+}
+
+.main nav ul{
+    list-style-type: none;
+    padding-left: 12px;
+    padding-top: 10px;
+}
+
+.main nav ul li:active {
+  transform: scale(0.95);
+}
+
+.sidebar nav a:hover {
+  background-color: #3b3f92;
+}
+
+.main nav{
+    padding-left: 2px;
+}
+
+.sidebar{
+    padding: 10px;
+    padding-left: 2px;
+}
+
+.sidebar_header{
+    position: fixed;
+    top: 2px;
+    right: 5px;
+    background-color: #2b2a2a;
+    padding: 5px;
+    width: 170px;
+    height: 150px;
+}
+
+.sidebar_header button {
+    background-color: #3b3f92;
+}
+
+.sidebar_header button:hover {
+  background-color: #5d62c5; /* темнее при наведении */
+}
+
+.sidebar_header nav {
+    padding-top: 2px;
+}
+
+.sidebar_header ul{
+    padding-left: 2px;
+    padding-top: 2px;
+}
+
+.sidebar_header ul li{
+    padding-top: 2px;
+    list-style-type: none;
+    background-color: #1e1e1e;
+}
+
+.sidebar_header nav a{
+    text-decoration: None;
+    color: #b6b6b6;
+    padding: 5px;
+    padding-top: 2px;
+    line-height: 15px;
+}
+
+.content{
+    flex:1;
+    background-color: #1f1f1f;
+    padding: 10px;
+    overflow: auto;
+}
+
+#transactionForm {
+    background-color: #2b2a2a;
+    padding: 15px;
+}
+
+#transactionForm label{
+    display: block;
+    margin-bottom: 2px;
+}
+
+.balance_page{
+    background-color: #181818;
+    list-style: none;
+    padding: 10px;
+    line-height: 35px;
+}
+
+h1 a {
+  text-decoration: none; /* убирает подчёркивание */
+  color: inherit;        /* делает цвет таким же, как у h1 */
+}

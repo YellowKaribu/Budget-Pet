@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+<title>BP Статистика</title>
+    <link rel="stylesheet" href="../static/style.css">
+  </head>
+  
+  <body>
+    <div class="header"> 
+      <h1><a href="index.html">Budget Pet - статистика</a></h1>
+      <div class="sidebar_header">
+        <nav>
+          <button><a href="#">ОБНОВИТЬ</a></button>
+          <ul>
+            <li><a href="#">Баланс:</a></li>
+            <li><a href="#">Резерв:</a></li>
+            <li><a href="#">Свободные:</a></li>
+            <li><a href="#">Аренда:</a></li>
+            <li><a href="#">Налоги:</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="add_transaction.html">Добавить транзакцию</a></li>
+            <li><a href="balance.html">Баланс</a></li>
+            <li><a href="transactions_log.html">Лог транзакций</a></li>
+            <li><a href="statistics.html">Статистика</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="content">
+        <h3>Статистика</h3>
+        <div class="log-block" id="transaction-log">
+  <!-- Сюда будут вставляться записи из лога -->
+        </div>
+      </div>  
+    </div>
+
+    <div class="footer">Подвал</div>
+  </body>
+
+</html>
