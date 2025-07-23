@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  
+  <body>
+    <a href="/" class="header-link">
+        <div class="header">
+            <h1>Budget Pet</h1>
+        </div>
+    </a>
+
+    <div class="sidebar_header">
+        <nav>
+          <ul>
+            <li><a href="#">Резерв: <span id='reserve_state_sidebar'></span></a></li>
+            <li><a href="#">Свободные: <span id='available_funds_state_sidebar'></span></a></li>
+            <li><a href="#">Аренда: <span id='rent_state_sidebar'></span></a></li>
+            <li><a href="#">Налоги: <span id='taxes_state_sidebar'></span></a></li>
+          </ul>
+        </nav>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="/add_transaction">Добавить транзакцию</a></li>
+            <li><a href="/balance">Баланс</a></li>
+            <li><a href="/transactions_log">Лог транзакций</a></li>
+            <li><a href="/statistics">Статистика</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div> 
+    </div>
+
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    {% block js %}{% endblock %}
+  </body>
+
+</html>

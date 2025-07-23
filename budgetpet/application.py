@@ -1,137 +1,188 @@
 from decimal import Decimal
-from datetime import datetime, date
+from typing import Literal, cast
+from datetime import datetime, date, time
 from dataclasses import replace, asdict
-from models import (
-    TransactionType, ParsedTransaction, BudgetState, TransactionInputData
+from budgetpet.models import (
+    OperationType, BudgetState, OperationData, TaxRate, LoggingError, MonthlyEvent
 )
-from constants import EXPENSE_CATEGORY, META_PATH, BUDGET_PATH, TRANSACTIONS_LOG_PATH
-from infrastructure import (
-    get_state, save_state, get_transaction_log, get_meta_data, save_meta_data, add_transaction_log
+from budgetpet.constants import EXPENSE_CATEGORY, META_PATH, BUDGET_PATH, TRANSACTIONS_LOG_PATH
+from budgetpet.infrastructure import (
+    get_current_budget_state, save_budget_state, 
+    get_transaction_log, get_monthly_events, save_meta_data, 
+    log_operation, update_monthly_event
     )
 
-def orchestrate_transaction(transaction_data: TransactionInputData):
+def process_new_operation(user_data: dict):
+    try:
+        validated_data = validate_user_data(user_data)
+    except ValueError as e:
+        print(f"Ошибка валидации: {e}")
+        raise
 
-    parsed_transaction = parse_transaction_input(transaction_data)
-    current_budget_state = get_state()
-    updated_state = apply_transaction_to_state(parsed_transaction, current_budget_state)
-    save_state(updated_state)
-    transaction_logging_data = build_log_entry(transaction_data)
-    log_transaction(transaction_logging_data)
+    current_budget_state = get_current_budget_state()
+    updated_state = apply_operation_to_budget(validated_data, current_budget_state)
+    save_budget_state(updated_state)
 
-
-def log_transaction(data: dict) -> None:
-    add_transaction_log(data)
-
-
-def build_log_entry(data: TransactionInputData) -> dict:
-    current_log = get_transaction_log()
-    transaction_id = len(current_log) + 1
-
-    data_to_dict = asdict(data)
-    transaction_date = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    entry = {"id": transaction_id, "timestamp": transaction_date, **data_to_dict}
-    return entry
+    try:
+        log_operation(validated_data)
+    except LoggingError as e:
+        print(f"Logging error: {e}")
+        raise
 
 
-def apply_transaction_to_state(data: ParsedTransaction, state: BudgetState) -> BudgetState:
-    if data.type == "income_no_tax":
-        updated_reserve = Decimal(state.reserve) + data.amount
-        return replace(state, reserve=str(updated_reserve))
-    elif data.type == "income_with_tax":
-        updated_reserve = Decimal(state.reserve) + data.amount * Decimal("0.8")
-        updated_taxes = Decimal(state.taxes) + data.amount * Decimal("0.2")
-        return replace(state, reserve=str(updated_reserve), taxes=str(updated_taxes))
-    elif data.type == "expense":
-        updated_available_funds = Decimal(state.available_funds) - data.amount
-        return replace(state, available_funds=str(updated_available_funds))
-    else:
-        raise ValueError(f"Unknown transaction type: {data.type}")
-
-
-def parse_transaction_input(transaction_data: TransactionInputData) -> ParsedTransaction:
-    new_amount = Decimal(transaction_data.amount.strip())
-    normalized_type = transaction_data.type.strip().lower()
-
-    if normalized_type == "income" and transaction_data.tax_status == "да":
-        tr_type = TransactionType.INCOME_WITH_TAX
-    elif normalized_type == "income" and transaction_data.tax_status == "нет":
-        tr_type = TransactionType.INCOME_NO_TAX
-    elif normalized_type == "expense":
-        tr_type = TransactionType.EXPENSE
-    else:
-        raise ValueError("Недопустимое сочетание типа и налогового статуса")
-
-    return ParsedTransaction(type=tr_type.value, amount=new_amount)
-
-
-def check_monthly_events(meta_data: dict, today: date) -> dict[str, bool]:
-    events_status = {"pay_rent_status": False, "make_monthly_calculations": False}
-
-    if should_pay_rent(today, meta_data):
-        pay_rent()
-        events_status["pay_rent_status"] = True
-
-    if should_make_monthly_calculations(today, meta_data):
-        monthly_recalculations()
-        events_status["make_monthly_calculations"] = True
-    return events_status
-
-
-def should_pay_rent(today: date, meta_data: dict) -> bool:
-    last_rent_pay_str = meta_data["last_rent_pay"]
-    last_rent_pay = datetime.strptime(last_rent_pay_str, "%Y-%m-%d").date()
-
-    return (
-        today.day >= 13 and (last_rent_pay.month != today.month or 
-         last_rent_pay.year != today.year)
-        )
-
-
-def pay_rent() -> None:
-    today = datetime.now().strftime("%Y-%m-%d")
-    meta_data = get_meta_data(META_PATH)
-    #check if already reset
-    if meta_data.get("last_rent_pay") == today:
-        return
-
-    current_balance = get_state()
-    updated_state = replace(current_balance, rent="0")
-    save_state(updated_state)
-
-    meta_data["last_rent_pay"] = today
-    save_meta_data(META_PATH, meta_data)
-
-
-def should_make_monthly_calculations(today: date, meta_data: dict) -> bool:
-    last_monthly_calcs_temp = meta_data["last_monthly_recalculations"]
-    last_rent_pay = datetime.strptime(last_monthly_calcs_temp, "%Y-%m-%d").date()
-
-    return (
-        today.day >= 1 and (last_rent_pay.month != today.month or 
-         last_rent_pay.year != today.year)
-        )
-
-
-def monthly_recalculations() -> None:
-    today = datetime.now().strftime("%Y-%m-%d")
-    meta_data = get_meta_data(META_PATH)
-    if meta_data.get("last_monthly_recalculations") == today:
-        return
+def apply_operation_to_budget(data: OperationData, state: BudgetState) -> BudgetState:
+    if data.operation_type == "income_no_tax":
+        updated_reserve = state.reserve + data.operation_amount
+        return state.model_copy(update={'reserve': updated_reserve})
     
-    current_balance = get_state()
+    elif data.operation_type == "income_with_tax":
+        updated_reserve = state.reserve + data.operation_amount * TaxRate.RESERVE
+        updated_taxes = state.taxes + data.operation_amount * TaxRate.TAX
+        return state.model_copy(update={'reserve': updated_reserve, 'taxes': updated_taxes})
+    
+    elif data.operation_type == "expense":
+        updated_available_funds = state.available_funds - data.operation_amount
+        return state.model_copy(update={'available_funds': updated_available_funds})
+    
+    else:
+        raise ValueError(f"Unknown transaction type: {data.operation_type}")
+
+
+def parse_operation_date(date_str: str | None) -> datetime:
+    if not date_str:
+        return datetime.now()
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            pass
+    raise ValueError("Неверный формат даты")
+
+
+def normalize_tax_status(value) -> str:
+    if value is None:
+        return "no"
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, str):
+        val = value.lower()
+        if val in ("yes", "no"):
+            return val
+    return "no"
+
+
+def parse_operation_type_and_tax(
+    type_str: str, tax_str: str
+) -> tuple[
+    Literal["income_no_tax", "income_with_tax", "expense"], str
+]:
+    tax_str = normalize_tax_status(tax_str)
+    type_str = type_str.strip().lower()
+
+    print(tax_str)
+
+    if type_str == "income":
+        if tax_str == "yes":
+            return "income_with_tax", "yes"
+        if tax_str == "no":
+            return "income_no_tax", "no"
+        raise ValueError("Недопустимый налоговый статус для дохода")
+    elif type_str == "expense":
+        return "expense", "no"
+
+    raise ValueError("Недопустимый тип транзакции")
+
+
+def validate_user_data(transaction_data: dict) -> OperationData:
+    operation_date = parse_operation_date(transaction_data.get('operation_date'))
+    operation_type, tax_status = parse_operation_type_and_tax(
+        transaction_data.get('type', ''),
+        transaction_data.get('income_from_ip', '')
+    )
+    amount = Decimal(str(transaction_data.get('amount', '')).strip())
+    category = transaction_data.get('category')
+    comment = transaction_data.get('comment', '')
+    print("validate_user_data input:", transaction_data)
+    print("Parsed tax_status:", transaction_data.get('income_from_ip'))
+
+
+    return OperationData(
+        operation_date=operation_date,
+        operation_type=operation_type,
+        operation_amount=amount,
+        operation_category=category,
+        operation_tax_status=tax_status,
+        operation_comment=comment
+    )
+
+
+def check_day_of_monthly_events(events: list[dict]) -> list:
+    today = date.today()
+    events_to_run = []
+
+    for event in events:
+        if today.day < event['trigger_day']:
+            continue
+
+        last_executed = cast(date, event['last_executed'])
+        if last_executed is None:
+            events_to_run.append(event['id'])
+            continue
+
+        if last_executed.year != today.year or last_executed.month != today.month:
+            events_to_run.append(event['id'])
+    
+    return events_to_run
+
+
+def run_monthly_event(events_to_run: list) -> None:
+    if events_to_run == 1:
+        pay_rent(events_to_run)
+    elif events_to_run == 2:
+        monthly_recalculations(events_to_run)
+
+
+def should_run_monthly_event() -> None:
+    try:
+        events_data = get_monthly_events()
+        events_to_run = check_day_of_monthly_events(events_data)
+        if events_to_run:
+            run_monthly_event(events_to_run)
+    #временная заглушка, пока не введен логгинг
+    except Exception as e:
+        print(f"Ошибка в should_run_monthly_event: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def pay_rent(event_id) -> None:
+    current_balance = get_current_budget_state()
+    updated_state = current_balance.model_copy(update={'operation_rent': Decimal('0')})
+    save_budget_state(updated_state)
+
+    last_executed_update = date.today()
+    update_monthly_event(event_id, last_executed_update)
+
+
+def monthly_recalculations(event_id) -> None:
+    current_balance = get_current_budget_state()
+
+    #Take rent money from 'reserve' and add to 'rent'
+    updated_state = current_balance.model_copy(update={"rent": Decimal("810")})
+    updated_state.reserve = updated_state.reserve - Decimal("810")
+
+    #Add last month earnings amount to free money (from reserve)
     last_month_income = calculate_last_month_income()
-    updated_state = replace(current_balance, rent="810")
     free_funds = updated_state.available_funds 
-    updated_state.available_funds = str(Decimal(last_month_income) + Decimal(free_funds))
-    updated_state.reserve = str(Decimal(updated_state.reserve) - Decimal(last_month_income))
-    updated_state.reserve = str(Decimal(updated_state.reserve) - Decimal("810"))
-    save_state(updated_state)
+    updated_state.available_funds = last_month_income + free_funds
+    updated_state.reserve = updated_state.reserve - last_month_income
+    save_budget_state(updated_state)
 
-    meta_data["last_monthly_recalculations"] = today
-    save_meta_data(META_PATH, meta_data)
+    last_executed_update = date.today()
+    update_monthly_event(event_id, last_executed_update)
 
 
-def calculate_last_month_income() -> str:
+def calculate_last_month_income() -> Decimal:
     log_record = get_transaction_log()
     total = Decimal("0")
     today = datetime.today()
@@ -150,5 +201,5 @@ def calculate_last_month_income() -> str:
         if tr_date.year == target_year and tr_date.month == target_month and tr["type"] == "income":
             total += Decimal(str(tr["amount"]))
 
-    return str(total)
+    return Decimal(total) * Decimal ('0.8')
     

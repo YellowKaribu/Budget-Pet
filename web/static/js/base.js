@@ -15,4 +15,3 @@ async function fetch_and_render_balance_sidebar() {
     console.error('Ошибка:', error);
   }
 }
-

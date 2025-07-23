@@ -1,4 +1,4 @@
-from constants import USER_MESSAGES
+from budgetpet.constants import USER_MESSAGES
 
 def get_msg_success_logged(operation_type="неизвестно"):
     """Возвращает сообщение об успешной записи с типом операции."""
