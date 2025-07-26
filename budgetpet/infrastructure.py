@@ -346,6 +346,15 @@ def notify_cancel() -> None:
     print (get_msg_transaction_cancelled())
 
 
+def map_type_for_log(internal_type: str) -> str:
+    type_mapping = {
+        "income_with_tax": "income",
+        "income_no_tax": "income",
+        "expense": "expense"
+    }
+    return type_mapping.get(internal_type, internal_type)
+
+
 def log_operation(user_data: OperationData) -> None:
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
@@ -354,6 +363,7 @@ def log_operation(user_data: OperationData) -> None:
         if user_data.operation_category is None:
             user_data.operation_category = 0
 
+        operation_type_for_logging = map_type_for_log(user_data.operation_type)
 
         query_update = '''
         INSERT INTO operations_history (timestamp, type, amount, comment, category, tax_status)
@@ -361,13 +371,14 @@ def log_operation(user_data: OperationData) -> None:
         '''
         values = (
             user_data.operation_date,
-            user_data.operation_type,
+            operation_type_for_logging,
             user_data.operation_amount,
             user_data.operation_comment,
             user_data.operation_category,
             user_data.operation_tax_status
         )
-        print("tax_status value:", user_data.operation_tax_status)
+
+        print(values)
 
         cursor.execute(query_update, values)
         connection.commit()

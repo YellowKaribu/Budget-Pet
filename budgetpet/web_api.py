@@ -29,11 +29,9 @@ def budget_state_json():
     state = get_current_budget_state()
     data = state.model_dump()
 
-    # Преобразуем Decimal → float (или str, если важна точность)
     for key, value in data.items():
         if isinstance(value, Decimal):
-            data[key] = float(value)  # или str(value)
-
+            data[key] = float(value)
     return jsonify(data)
 
 @app.route('/transactions.jsonl')

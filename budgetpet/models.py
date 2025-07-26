@@ -68,5 +68,6 @@ class OperationData(BaseModel):
 
 class OperationRecord(OperationData):
     id: int
+    operation_type: Literal["income", "expense"]
 
 

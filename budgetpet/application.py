@@ -31,6 +31,8 @@ def process_new_operation(user_data: dict):
 
 
 def apply_operation_to_budget(data: OperationData, state: BudgetState) -> BudgetState:
+    print("Тип операции:", data.operation_type)
+
     if data.operation_type == "income_no_tax":
         updated_reserve = state.reserve + data.operation_amount
         return state.model_copy(update={'reserve': updated_reserve})
@@ -60,14 +62,17 @@ def parse_operation_date(date_str: str | None) -> datetime:
 
 
 def normalize_tax_status(value) -> str:
+    print("функций нормалайз, поступившее значение налогвоого статуса", value)
     if value is None:
         return "no"
     if isinstance(value, bool):
         return "yes" if value else "no"
     if isinstance(value, str):
+        print("сработал третий иф")
         val = value.lower()
         if val in ("yes", "no"):
             return val
+    print("точка конца нормалайз,", value)
     return "no"
 
 
@@ -76,10 +81,9 @@ def parse_operation_type_and_tax(
 ) -> tuple[
     Literal["income_no_tax", "income_with_tax", "expense"], str
 ]:
+    print("поступающее значение нал. статуса в нормалайз - ", tax_str)
     tax_str = normalize_tax_status(tax_str)
     type_str = type_str.strip().lower()
-
-    print(tax_str)
 
     if type_str == "income":
         if tax_str == "yes":
@@ -94,17 +98,16 @@ def parse_operation_type_and_tax(
 
 
 def validate_user_data(transaction_data: dict) -> OperationData:
+
     operation_date = parse_operation_date(transaction_data.get('operation_date'))
     operation_type, tax_status = parse_operation_type_and_tax(
         transaction_data.get('type', ''),
-        transaction_data.get('income_from_ip', '')
+        transaction_data.get('tax_status', '')
     )
+
     amount = Decimal(str(transaction_data.get('amount', '')).strip())
     category = transaction_data.get('category')
     comment = transaction_data.get('comment', '')
-    print("validate_user_data input:", transaction_data)
-    print("Parsed tax_status:", transaction_data.get('income_from_ip'))
-
 
     return OperationData(
         operation_date=operation_date,
