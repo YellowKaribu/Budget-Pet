@@ -21,11 +21,12 @@ USER_MESSAGES = {
         "Введите: add (добавить расход/доход), exit (выйти): "
 }
 EXPENSE_CATEGORY = {
-    "1": "Еда",
-    "2": "Коммуналка",
-    "3": "Лекарства",
-    "4": "Развлечения",
-    "5": "Прочее"
+    "food": '1',
+    "utilities": '2',
+    "medicines": '3',
+    "entertainment": '4',
+    "other": '5',
+    "0": "0"
     }
 BUDGET_PATH = "budget_state.json"
 TRANSACTIONS_LOG_PATH = "transactions.jsonl"

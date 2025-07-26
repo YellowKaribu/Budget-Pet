@@ -1,12 +1,20 @@
-from constants import TRANSACTIONS_LOG_PATH, BUDGET_PATH, EXPENSE_CATEGORY
-from models import BudgetState, CancelledTransaction
+
+from budgetpet.constants import TRANSACTIONS_LOG_PATH, BUDGET_PATH, EXPENSE_CATEGORY
+from budgetpet.models import BudgetState, CancelledOperation
 import json
+import pymysql
+import mysql.connector
 from dataclasses import asdict
 from typing import Any, Literal
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
-
-from messages import(
+from budgetpet.models import (
+    OperationData, 
+    LoggingError, 
+    GettingFromDbError, 
+    MonthlyEventDBError, 
+    OperationRecord)
+from budgetpet.messages import(
     get_err_empty_input,
     get_err_input_not_a_number,
     get_err_invalid_input,
@@ -22,15 +30,84 @@ from messages import(
     get_prompt_transaction_type
 )
 
-def get_state() -> BudgetState:
-    with open(BUDGET_PATH, "r") as f:
-        data = json.load(f)
-        return BudgetState(**data)
-    
+import os
+from dotenv import load_dotenv
 
-def save_state(state: BudgetState) -> None:
-    with open(BUDGET_PATH, "w") as f:
-        json.dump(asdict(state), f, indent=2)
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', 'secrets', '.env')
+load_dotenv(dotenv_path)
+
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "localhost"),
+    "user": os.getenv("DB_USER", "admin"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME", "budget"),
+}
+
+
+def get_current_budget_state() -> BudgetState:
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM budget_state LIMIT 1")
+    row = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if not row:
+        raise RuntimeError("No budget state found")
+    return BudgetState(**row) # type: ignore
+    
+    
+def map_row_to_record(row: dict) -> OperationRecord:
+    return OperationRecord(
+        id=row["id"],
+        operation_date=row["timestamp"],
+        operation_type=row["type"],
+        operation_amount=row["amount"],
+        operation_category=row.get("category"),
+        operation_tax_status=row.get("tax_status", "no"),
+        operation_comment=row.get("comment")
+    )
+
+
+
+def get_operation_history() -> list[OperationRecord]:
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM operations_history ORDER BY timestamp DESC LIMIT 100")
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return [map_row_to_record(row) for row in rows] # type: ignore
+
+
+
+def save_budget_state(state: BudgetState) -> None:
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor()
+
+    query_update = '''
+        UPDATE budget_state SET reserve=%s, available_funds=%s, rent=%s, taxes=%s LIMIT 1
+    '''
+    values = (state.reserve, state.available_funds, state.rent, state.taxes)
+
+    cursor.execute(query_update, values)
+
+    if cursor.rowcount == 0:
+        query_insert = '''
+        INSERT INTO budget_state (reserve, available_funds, rent, taxes)
+        VALUES (%s, %s, %s, %s)
+        '''
+        cursor.execute(query_insert, values)
+    
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 
 def get_transaction_log() -> list[dict]:
@@ -40,15 +117,26 @@ def get_transaction_log() -> list[dict]:
         return entries
     
 
-def add_transaction_log(entry: dict) -> None:
-    with open(TRANSACTIONS_LOG_PATH, "a") as f:
-        json.dump(entry, f)
-        f.write("\n")
+def get_monthly_events() -> list[dict]:
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor(dictionary=True)
 
+        query = '''
+        SELECT id, trigger_day, last_executed, is_active FROM monthly_events;
+        '''
+        cursor.execute(query)
+        events = cursor.fetchall()
 
-def get_meta_data(path: str) -> dict:
-    data = load_json(path)
-    return validate_meta_data(data)
+    except GettingFromDbError as e:
+        print(f'error: {e}')
+        raise
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return events # type: ignore
 
 
 def get_last_month_expense_statistic() -> tuple:
@@ -132,7 +220,7 @@ def prompt_transaction_type() -> Literal["expense", "income"]:
         elif user_input_type == "-":
             return "expense"
         elif user_input_type == "отмена":
-            raise CancelledTransaction()
+            raise CancelledOperation()
             
         print(get_err_invalid_input())
 
@@ -148,7 +236,7 @@ def prompt_transaction_amount() -> str:
             continue
 
         elif input_amount == "отмена":
-            raise CancelledTransaction()
+            raise CancelledOperation()
 
         try:
             amount = float(validated_input_amount)
@@ -168,7 +256,7 @@ def prompt_transaction_category() -> str:
         if user_input in EXPENSE_CATEGORY:
             return user_input
         elif user_input == "отмена":
-            raise CancelledTransaction()
+            raise CancelledOperation()
         print(get_err_invalid_input())
 
 
@@ -176,7 +264,7 @@ def prompt_transaction_comment() -> str:
         
     user_input = input(get_prompt_comment()).strip()
     if user_input == "отмена":
-        raise CancelledTransaction()
+        raise CancelledOperation()
     
     return user_input
 
@@ -188,7 +276,7 @@ def prompt_tax_status() -> str:
         if user_input in ("да", "нет"):
             return user_input
         elif user_input == "отмена":
-            raise CancelledTransaction()
+            raise CancelledOperation()
         
         print(get_err_invalid_input())
 
@@ -256,4 +344,77 @@ def notify_success() -> None:
 
 def notify_cancel() -> None:
     print (get_msg_transaction_cancelled())
+
+
+def map_type_for_log(internal_type: str) -> str:
+    type_mapping = {
+        "income_with_tax": "income",
+        "income_no_tax": "income",
+        "expense": "expense"
+    }
+    return type_mapping.get(internal_type, internal_type)
+
+
+def log_operation(user_data: OperationData) -> None:
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+
+        if user_data.operation_category is None:
+            user_data.operation_category = 0
+
+        operation_type_for_logging = map_type_for_log(user_data.operation_type)
+
+        query_update = '''
+        INSERT INTO operations_history (timestamp, type, amount, comment, category, tax_status)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        '''
+        values = (
+            user_data.operation_date,
+            operation_type_for_logging,
+            user_data.operation_amount,
+            user_data.operation_comment,
+            user_data.operation_category,
+            user_data.operation_tax_status
+        )
+
+        print(values)
+
+        cursor.execute(query_update, values)
+        connection.commit()
+
+    except mysql.connector.Error as e:
+        raise LoggingError(f"Ошибка при сохранении лога: {e}")
+
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+def update_monthly_event(event_id: int, last_executed: date) -> None:
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+
+        query = """
+            UPDATE monthly_events
+            SET last_executed = %s
+            WHERE id = %s
+        """
+        values = (last_executed, event_id)
+
+        cursor.execute(query, values)
+        connection.commit()
+
+    except mysql.connector.Error as e:
+        raise MonthlyEventDBError(f"Ошибка при сохранении данных ежемес. ивентов в бд: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 

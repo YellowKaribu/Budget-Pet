@@ -1,11 +1,11 @@
 import sys
 from constants import EXPENSE_CATEGORY, META_PATH
-from models import CancelledTransaction, TransactionInputData
+from models import CancelledOperation, OperationData
 from datetime import date
 from infrastructure import (
-    get_state,
+    get_current_budget_state,
     get_transaction_log,
-    get_meta_data,
+    get_monthly_events,
     get_last_month_expense_statistic,
     notify_monthly_events,
     prompt_tax_status,
@@ -24,12 +24,12 @@ from infrastructure import (
 
 from application import (
     check_monthly_events,
-    orchestrate_transaction
+    process_new_operation
     )
 
 def main():
     '''Entry point.'''
-    meta = get_meta_data(META_PATH)
+    meta = get_monthly_events(META_PATH)
     statuses = check_monthly_events(meta, date.today())
     if any(statuses.values()):
         notify_monthly_events(statuses)
@@ -41,10 +41,10 @@ def main():
         if choice == "1":
             try:
                 tr_data = collect_transaction_data()
-            except CancelledTransaction:
+            except CancelledOperation:
                 notify_cancel()
                 continue
-            orchestrate_transaction(tr_data)
+            process_new_operation(tr_data)
             notify_success()
             
         elif choice == "2":
@@ -54,7 +54,7 @@ def main():
         elif choice == "3":
             try:
                 show_transactions_log()
-            except CancelledTransaction:
+            except CancelledOperation:
                 notify_cancel()
                 continue
 
@@ -69,7 +69,7 @@ def main():
             notify_invalid_choice()
 
 
-def collect_transaction_data() -> TransactionInputData:
+def collect_transaction_data() -> OperationData:
     tr_type = prompt_transaction_type()
     tr_tax_status = None
     tr_category = None
@@ -81,7 +81,7 @@ def collect_transaction_data() -> TransactionInputData:
     tr_amount = prompt_transaction_amount()
     tr_comment = prompt_transaction_comment()
 
-    return TransactionInputData(
+    return OperationData(
         type=tr_type,
         amount=tr_amount,
         comment=tr_comment,
@@ -96,7 +96,7 @@ def show_transactions_log():
 
 
 def show_budget_balance():
-    budget_state = get_state()
+    budget_state = get_current_budget_state()
     show_budget_state(budget_state)
 
 

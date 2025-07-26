@@ -25,3 +25,4 @@ Thumbs.db
 
 # Environment variables or secrets
 .env
+secrets/

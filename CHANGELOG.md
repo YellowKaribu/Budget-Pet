@@ -17,6 +17,7 @@
 - Consolidated input/output handling in `cli.py` for CLI display and prompts.
 - Refactored domain models and enums into `models.py`.
 - Reworked monthly events check and transaction orchestration logic.
+- dataclasses replaced by pydantic
 
 ### Removed
 - Removed ports, adapters, and abstractions from hexagonal architecture, which were unnecessary for a small CLI tool.

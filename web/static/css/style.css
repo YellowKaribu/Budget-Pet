@@ -7,11 +7,18 @@ body {
     height: 100vh;
 }
 
+a.header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+
 .header{
     background-color: #181818;
     height: 20vh;
     padding: 10px;
-    
+
 }
 
 .footer{
@@ -43,11 +50,11 @@ body {
 }
 
 .main nav ul li:active {
-  transform: scale(0.95);
+    transform: scale(0.95);
 }
 
 .sidebar nav a:hover {
-  background-color: #3b3f92;
+    background-color: #3b3f92;
 }
 
 .main nav{
@@ -66,7 +73,7 @@ body {
     background-color: #2b2a2a;
     padding: 5px;
     width: 170px;
-    height: 150px;
+    height: 120px;
 }
 
 .sidebar_header button {
@@ -74,7 +81,7 @@ body {
 }
 
 .sidebar_header button:hover {
-  background-color: #5d62c5; /* темнее при наведении */
+    background-color: #5d62c5;
 }
 
 .sidebar_header nav {
@@ -112,9 +119,18 @@ body {
     padding: 15px;
 }
 
-#transactionForm label{
-    display: block;
-    margin-bottom: 2px;
+#transactionForm label select{
+    padding: 12px;
+}
+
+.main #transactions p {
+    font-size: 14px;
+    background-color: #2b2a2a;
+    color: aliceblue;
+}
+
+.main #transactions .transaction.income {
+    background-color: rgb(42, 65, 56);
 }
 
 .balance_page{
@@ -125,6 +141,41 @@ body {
 }
 
 h1 a {
-  text-decoration: none; /* убирает подчёркивание */
-  color: inherit;        /* делает цвет таким же, как у h1 */
+    text-decoration: none;
+    color: inherit;
+}
+
+.toggle-group {
+  display: inline-flex;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+.toggle-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #f2f2f2;
+  user-select: none;
+  border-right: 1px solid #ccc;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.toggle-option:last-child {
+  border-right: none;
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-option.selected {
+  background-color: #3b3f92;
+  color: white;
+  transition: background-color 0.3s ease;
 }

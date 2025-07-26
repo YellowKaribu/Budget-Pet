@@ -1,94 +1,68 @@
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8">
-    <title>BP Добавить транзакцию</title>
-    <link rel="stylesheet" href="../static/style.css">
-  </head>
-  
-  <body>
-    <div class="header"> 
-      <h1><a href="index.html">Budget Pet - добавить транзакцию</a></h1>
-      <div class="sidebar_header">
-        <nav>
-          <button><a href="#">ОБНОВИТЬ</a></button>
-          <ul>
-            <li><a href="#">Баланс:</a></li>
-            <li><a href="#">Резерв:</a></li>
-            <li><a href="#">Свободные:</a></li>
-            <li><a href="#">Аренда:</a></li>
-            <li><a href="#">Налоги:</a></li>
-          </ul>
-        </nav>
+{% extends 'base.html' %}
+{% block title %}BP Добавить транзакцию{% endblock %}
+
+{% block content %}
+<h3>Добавление транзакций</h3>
+  <form id="operation-form" method="POST" action="/new_operation.json">
+
+    <label for="operation_date">Дата операции:</label>
+    <input type="date" id="operation_date" name="operation_date"/>
+
+    <br>
+
+    <label>
+      Тип транзакции:
+      <div class="toggle-group">
+        <label class="toggle-option">
+          <input type="radio" name="type" id="expense" value="expense" class="toggle-input" checked>
+          Расход
+        </label>
+        <label class="toggle-option">
+          <input type="radio" name="type" id="income" value="income" class="toggle-input" required>
+          Доход
+        </label>
       </div>
-    </div>
 
-    <div class="main">
-      <div class="sidebar">
-        <nav>
-          <ul>
-            <li><a href="add_transaction.html">Добавить транзакцию</a></li>
-            <li><a href="balance.html">Баланс</a></li>
-            <li><a href="transactions_log.html">Лог транзакций</a></li>
-            <li><a href="statistics.html">Статистика</a></li>
-          </ul>
-        </nav>
-      </div>
-      <div class="content">
-        <h3>Добавление транзакций</h3>
-        <form id="transactionForm" method="POST" action="/add-transaction">
-  <label>
-    Тип транзакции:
-    <select name="type" id="typeSelect" required>
-      <option value="" disabled selected>Выберите тип</option>
-      <option value="income">Доход</option>
-      <option value="expense">Расход</option>
-    </select>
-  </label>
-  <br>
+    </label>
+    <br>
 
-  <label>
-    Доход от ИП?
-    <select name="income_from_ip" id="incomeFromIP" disabled>
-      <option value="yes">Да</option>
-      <option value="no" selected>Нет</option>
-    </select>
-  </label>
-  <br>
+    <label>
+      Доход от ИП?
+      <select name="income_from_ip" id="tax_status" disabled>
+        <option value="yes">Да</option>
+        <option value="no" selected>Нет</option>
+      </select>
+    </label>
+    <br>
 
-  <label>
-    Категория:
-    <select name="category" id="categorySelect" disabled>
-      <option value="food">Еда</option>
-      <option value="utilities">Коммуналка</option>
-      <option value="medicines">Лекарства</option>
-      <option value="entertainment">Развлечения</option>
-      <option value="other">Прочее</option>
-    </select>
-  </label>
-  <br>
+    <label>
+      Категория:
+      <select name="category" id="categorySelect" disabled>
+        <option value="1">Еда</option>
+        <option value="2">Коммуналка</option>
+        <option value="3">Лекарства</option>
+        <option value="4">Развлечения</option>
+        <option value="5">Прочее</option>
+      </select>
+    </label>
+    <br>
 
-  <label>
-    Сумма:
-    <input type="number" name="amount" step="0.01" required>
-  </label>
-  <br>
+    <label>
+      Сумма:
+      <input type="number" name="amount" step="0.01" required>
+    </label>
+    <br>
 
-  <label>
-    Комментарий:
-    <textarea name="comment" rows="3"></textarea>
-  </label>
-  <br>
+    <label>
+      Комментарий:
+      <textarea name="comment" rows="3"></textarea>
+    </label>
+    <br>
 
   <button type="submit">Принять</button>
   <button type="reset">Очистить</button>
 
 </form>
+{% endblock %}
 
-      </div>  
-    </div>
-
-    <div class="footer">Подвал</div>
-  </body>
-
-</html>
+{% block js %}<script src="{{ url_for('static', filename='js/add_transaction.js') }}"></script>{% endblock %}
