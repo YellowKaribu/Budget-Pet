@@ -38,7 +38,18 @@ Requirements
 
 ---
 
-## Running the App
+## Running the Database and Web API
+
+Before using the app, ensure your MySQL database is running and properly configured.
+
+To start the backend web API server, run:
 
 ```bash
-python3 main.py
+python3 web_api.py
+```
+
+This will launch the web application locally. Open your browser and go to:
+
+```bash http://127.0.0.1:5000 ```
+
+(Adjust the port if your server uses a different one.)
