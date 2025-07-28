@@ -4,6 +4,8 @@ from budgetpet.models import BudgetState, CancelledOperation
 import json
 import pymysql
 import mysql.connector
+import os
+from budgetpet.db import db_cursor
 from dataclasses import asdict
 from typing import Any, Literal
 from datetime import datetime, date
@@ -29,12 +31,8 @@ from budgetpet.messages import(
     get_prompt_transaction_category,
     get_prompt_transaction_type
 )
+from budgetpet.logger import logger
 
-import os
-from dotenv import load_dotenv
-
-dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', 'secrets', '.env')
-load_dotenv(dotenv_path)
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
@@ -44,15 +42,10 @@ DB_CONFIG = {
 }
 
 
-def get_current_budget_state() -> BudgetState:
-    connection = mysql.connector.connect(**DB_CONFIG)
-    cursor = connection.cursor(dictionary=True)
+def get_current_budget_state(cursor) -> BudgetState:
 
     cursor.execute("SELECT * FROM budget_state LIMIT 1")
     row = cursor.fetchone()
-
-    cursor.close()
-    connection.close()
 
     if not row:
         raise RuntimeError("No budget state found")
@@ -71,26 +64,20 @@ def map_row_to_record(row: dict) -> OperationRecord:
     )
 
 
-
 def get_operation_history() -> list[OperationRecord]:
-    connection = mysql.connector.connect(**DB_CONFIG)
-    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        with db_cursor() as cursor:
+            cursor.execute("SELECT * FROM operations_history ORDER BY timestamp DESC LIMIT 100")
+            rows = cursor.fetchall()
+            return [map_row_to_record(row) for row in rows] # type: ignore
 
-    cursor.execute("SELECT * FROM operations_history ORDER BY timestamp DESC LIMIT 100")
-
-    rows = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-
-    return [map_row_to_record(row) for row in rows] # type: ignore
-
+    except Exception as e:
+        logger.error('Ошибка при получении истории операций: %s', e)
+        raise
 
 
-def save_budget_state(state: BudgetState) -> None:
-    connection = mysql.connector.connect(**DB_CONFIG)
-    cursor = connection.cursor()
-
+def save_budget_state(state: BudgetState, cursor) -> None:
     query_update = '''
         UPDATE budget_state SET reserve=%s, available_funds=%s, rent=%s, taxes=%s LIMIT 1
     '''
@@ -104,10 +91,6 @@ def save_budget_state(state: BudgetState) -> None:
         VALUES (%s, %s, %s, %s)
         '''
         cursor.execute(query_insert, values)
-    
-    connection.commit()
-    cursor.close()
-    connection.close()
 
 
 def get_transaction_log() -> list[dict]:
@@ -118,25 +101,19 @@ def get_transaction_log() -> list[dict]:
     
 
 def get_monthly_events() -> list[dict]:
-    try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        cursor = connection.cursor(dictionary=True)
 
-        query = '''
-        SELECT id, trigger_day, last_executed, is_active FROM monthly_events;
-        '''
-        cursor.execute(query)
-        events = cursor.fetchall()
+    query = '''
+    SELECT id, trigger_day, last_executed, is_active FROM monthly_events;
+    '''
+    try:
+        with db_cursor() as cursor:
+            cursor.execute(query)
+            events = cursor.fetchall()
+            return events # type: ignore
 
     except GettingFromDbError as e:
-        print(f'error: {e}')
+        logger.error('Ошибка при получении списка ежемес. ивентов из бд: %s', e)
         raise
-
-    finally:
-        cursor.close()
-        connection.close()
-
-    return events # type: ignore
 
 
 def get_last_month_expense_statistic() -> tuple:
@@ -355,11 +332,8 @@ def map_type_for_log(internal_type: str) -> str:
     return type_mapping.get(internal_type, internal_type)
 
 
-def log_operation(user_data: OperationData) -> None:
+def log_operation(user_data: OperationData, cursor) -> None:
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        cursor = connection.cursor()
-
         if user_data.operation_category is None:
             user_data.operation_category = 0
 
@@ -377,44 +351,24 @@ def log_operation(user_data: OperationData) -> None:
             user_data.operation_category,
             user_data.operation_tax_status
         )
-
-        print(values)
-
         cursor.execute(query_update, values)
-        connection.commit()
 
     except mysql.connector.Error as e:
         raise LoggingError(f"Ошибка при сохранении лога: {e}")
 
-    
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-
 
 def update_monthly_event(event_id: int, last_executed: date) -> None:
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        cursor = connection.cursor()
+        with db_cursor() as cursor:
 
-        query = """
-            UPDATE monthly_events
-            SET last_executed = %s
-            WHERE id = %s
-        """
-        values = (last_executed, event_id)
+            query = """
+                UPDATE monthly_events
+                SET last_executed = %s
+                WHERE id = %s
+            """
+            values = (last_executed, event_id)
 
-        cursor.execute(query, values)
-        connection.commit()
+            cursor.execute(query, values)
 
     except mysql.connector.Error as e:
         raise MonthlyEventDBError(f"Ошибка при сохранении данных ежемес. ивентов в бд: {e}")
-
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-

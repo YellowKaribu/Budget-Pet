@@ -8,9 +8,11 @@ from budgetpet.models import (
 from budgetpet.constants import EXPENSE_CATEGORY, META_PATH, BUDGET_PATH, TRANSACTIONS_LOG_PATH
 from budgetpet.infrastructure import (
     get_current_budget_state, save_budget_state, 
-    get_transaction_log, get_monthly_events, save_meta_data, 
+    get_transaction_log, get_monthly_events, 
     log_operation, update_monthly_event
     )
+from budgetpet.db import db_cursor
+
 
 def process_new_operation(user_data: dict):
     logger.debug('Ядро начало обработку операции со следующими данными: %s', user_data)
@@ -21,21 +23,24 @@ def process_new_operation(user_data: dict):
     except ValueError as e:
         logger.warning('Ошибка валидации данных, полученных в оркестратор операций: %s', e)
         raise
-    
-    try:
-        logger.debug('Начато выполнение расчетов и запись в бд бюджета. ')
-        current_budget_state = get_current_budget_state()
-        updated_state = apply_operation_to_budget(validated_data, current_budget_state)
-        save_budget_state(updated_state)
-    except Exception as e:
-        logger.error('Ошибка выполнения операции с бюджетом: %s', e)
-        raise
 
     try:
-        logger.debug('Начато добавление в историю операций.')
-        log_operation(validated_data)
+        with db_cursor() as cursor:
+    
+            logger.debug('Начато выполнение расчетов и запись в бд бюджета. ')
+            current_budget_state = get_current_budget_state(cursor)
+            updated_state = apply_operation_to_budget(validated_data, current_budget_state)
+
+            logger.debug('Начато добавление в историю операций.')
+            save_budget_state(updated_state, cursor)
+            log_operation(validated_data, cursor)
+
     except LoggingError as e:
         logger.error('Ошибка записи истории операций: %s', e)
+        raise
+
+    except Exception as e:
+        logger.error('Ошибка выполнения операции с бюджетом: %s', e)
         raise
 
     logger.info('Операция выполнена и записана успешно')
@@ -104,7 +109,6 @@ def parse_operation_type_and_tax(
 
 
 def validate_user_data(transaction_data: dict) -> OperationData:
-
     operation_date = parse_operation_date(transaction_data.get('operation_date'))
     operation_type, tax_status = parse_operation_type_and_tax(
         transaction_data.get('type', ''),
@@ -157,37 +161,45 @@ def should_run_monthly_event() -> None:
         events_to_run = check_day_of_monthly_events(events_data)
         if events_to_run:
             run_monthly_event(events_to_run)
-    #временная заглушка, пока не введен логгинг
     except Exception as e:
         logger.error('Ошибка при проверке ежемесячных ивентов: %s', e)
         raise
 
 
 def pay_rent(event_id) -> None:
-    current_balance = get_current_budget_state()
-    updated_state = current_balance.model_copy(update={'operation_rent': Decimal('0')})
-    save_budget_state(updated_state)
+    try:
+        with db_cursor() as cursor:
+            current_balance = get_current_budget_state(cursor)
+            updated_state = current_balance.model_copy(update={'operation_rent': Decimal('0')})
+            save_budget_state(updated_state, cursor)
 
-    last_executed_update = date.today()
-    update_monthly_event(event_id, last_executed_update)
+            last_executed_update = date.today()
+            update_monthly_event(event_id, last_executed_update)
+    except Exception as e:
+        logger.error('Ошибка при оплате аренды в бюджете: %s', e)
 
 
 def monthly_recalculations(event_id) -> None:
-    current_balance = get_current_budget_state()
+    try:
+        with db_cursor() as cursor:
+            current_balance = get_current_budget_state(cursor)
 
-    #Take rent money from 'reserve' and add to 'rent'
-    updated_state = current_balance.model_copy(update={"rent": Decimal("810")})
-    updated_state.reserve = updated_state.reserve - Decimal("810")
+            #Take rent money from 'reserve' and add to 'rent'
+            updated_state = current_balance.model_copy(update={"rent": Decimal("810")})
+            updated_state.reserve = updated_state.reserve - Decimal("810")
 
-    #Add last month earnings amount to free money (from reserve)
-    last_month_income = calculate_last_month_income()
-    free_funds = updated_state.available_funds 
-    updated_state.available_funds = last_month_income + free_funds
-    updated_state.reserve = updated_state.reserve - last_month_income
-    save_budget_state(updated_state)
+            #Add last month earnings amount to free money (from reserve)
+            last_month_income = calculate_last_month_income()
+            free_funds = updated_state.available_funds 
+            updated_state.available_funds = last_month_income + free_funds
+            updated_state.reserve = updated_state.reserve - last_month_income
+            save_budget_state(updated_state, cursor)
 
-    last_executed_update = date.today()
-    update_monthly_event(event_id, last_executed_update)
+            last_executed_update = date.today()
+            update_monthly_event(event_id, last_executed_update)
+    
+    except Exception as e:
+        logger.debug("Ошибка при ивенте ежемесячных рекалькуляций: %s", e)
 
 
 def calculate_last_month_income() -> Decimal:
