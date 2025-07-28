@@ -1,6 +1,5 @@
-import json
 import os
-import logging
+from budgetpet.logger import logger
 from decimal import Decimal
 from flask import Flask, jsonify, render_template, request, url_for, redirect
 from budgetpet.constants import BUDGET_PATH, TRANSACTIONS_LOG_PATH
@@ -10,7 +9,6 @@ from budgetpet.application import process_new_operation, should_run_monthly_even
 from budgetpet.validators import valitate_new_operation_input
 from typing import Any
 from budgetpet.models import LoggingError
-
 
 app = Flask(
     __name__,
@@ -65,6 +63,7 @@ from flask import request, jsonify
 @app.route('/new_operation.json', methods=['POST'])
 def new_operation():
     user_data: Any = request.json
+    logger.debug('АПИ принимает запрос на новую операцию со следующими данными: %s', user_data)
 
     if not isinstance(user_data, dict):
         return jsonify({"error": "Неверный формат данных"}), 400
@@ -80,7 +79,7 @@ def new_operation():
     except LoggingError as e:
         return jsonify({"error": "Ошибка логирования операции"}), 500
     except Exception:
-        logging.exception("Внутренняя ошибка сервера при обработке операции")
+        logger.exception("Внутренняя ошибка сервера при обработке операции")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
     
     return jsonify({'ok': True})

@@ -1,7 +1,7 @@
 from decimal import Decimal
+from budgetpet.logger import logger
 from typing import Literal, cast
 from datetime import datetime, date, time
-from dataclasses import replace, asdict
 from budgetpet.models import (
     OperationType, BudgetState, OperationData, TaxRate, LoggingError, MonthlyEvent
 )
@@ -13,25 +13,35 @@ from budgetpet.infrastructure import (
     )
 
 def process_new_operation(user_data: dict):
+    logger.debug('Ядро начало обработку операции со следующими данными: %s', user_data)
+
     try:
+        logger.debug('Начата валидация данных.')
         validated_data = validate_user_data(user_data)
     except ValueError as e:
-        print(f"Ошибка валидации: {e}")
+        logger.warning('Ошибка валидации данных, полученных в оркестратор операций: %s', e)
         raise
-
-    current_budget_state = get_current_budget_state()
-    updated_state = apply_operation_to_budget(validated_data, current_budget_state)
-    save_budget_state(updated_state)
+    
+    try:
+        logger.debug('Начато выполнение расчетов и запись в бд бюджета. ')
+        current_budget_state = get_current_budget_state()
+        updated_state = apply_operation_to_budget(validated_data, current_budget_state)
+        save_budget_state(updated_state)
+    except Exception as e:
+        logger.error('Ошибка выполнения операции с бюджетом: %s', e)
+        raise
 
     try:
+        logger.debug('Начато добавление в историю операций.')
         log_operation(validated_data)
     except LoggingError as e:
-        print(f"Logging error: {e}")
+        logger.error('Ошибка записи истории операций: %s', e)
         raise
+
+    logger.info('Операция выполнена и записана успешно')
 
 
 def apply_operation_to_budget(data: OperationData, state: BudgetState) -> BudgetState:
-    print("Тип операции:", data.operation_type)
 
     if data.operation_type == "income_no_tax":
         updated_reserve = state.reserve + data.operation_amount
@@ -62,17 +72,14 @@ def parse_operation_date(date_str: str | None) -> datetime:
 
 
 def normalize_tax_status(value) -> str:
-    print("функций нормалайз, поступившее значение налогвоого статуса", value)
     if value is None:
         return "no"
     if isinstance(value, bool):
         return "yes" if value else "no"
     if isinstance(value, str):
-        print("сработал третий иф")
         val = value.lower()
         if val in ("yes", "no"):
             return val
-    print("точка конца нормалайз,", value)
     return "no"
 
 
@@ -81,7 +88,6 @@ def parse_operation_type_and_tax(
 ) -> tuple[
     Literal["income_no_tax", "income_with_tax", "expense"], str
 ]:
-    print("поступающее значение нал. статуса в нормалайз - ", tax_str)
     tax_str = normalize_tax_status(tax_str)
     type_str = type_str.strip().lower()
 
@@ -153,9 +159,8 @@ def should_run_monthly_event() -> None:
             run_monthly_event(events_to_run)
     #временная заглушка, пока не введен логгинг
     except Exception as e:
-        print(f"Ошибка в should_run_monthly_event: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error('Ошибка при проверке ежемесячных ивентов: %s', e)
+        raise
 
 
 def pay_rent(event_id) -> None:
