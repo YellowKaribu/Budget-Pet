@@ -4,11 +4,13 @@ from decimal import Decimal
 from flask import Flask, jsonify, render_template, request, url_for, redirect
 from budgetpet.constants import BUDGET_PATH, TRANSACTIONS_LOG_PATH
 from budgetpet.infrastructure import get_current_budget_state, get_operation_history
-from dataclasses import asdict
 from budgetpet.application import process_new_operation, should_run_monthly_event
 from budgetpet.validators import valitate_new_operation_input
 from typing import Any
 from budgetpet.models import LoggingError
+from flask import request, jsonify
+from budgetpet.db import db_cursor
+
 
 app = Flask(
     __name__,
@@ -24,13 +26,16 @@ def balance_page():
 
 @app.route('/budget_state.json')
 def budget_state_json():
-    state = get_current_budget_state()
-    data = state.model_dump()
+    with db_cursor() as cursor:
+        state = get_current_budget_state(cursor)
+        data = state.model_dump()
 
-    for key, value in data.items():
-        if isinstance(value, Decimal):
-            data[key] = float(value)
-    return jsonify(data)
+        for key, value in data.items():
+            if isinstance(value, Decimal):
+                data[key] = float(value)
+
+        return jsonify(data)
+
 
 @app.route('/transactions.jsonl')
 def transactions_json():
@@ -45,8 +50,6 @@ def transactions_log():
     return render_template("transactions_log.html", transactions=operations_history)
 
 
-
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -56,9 +59,6 @@ def home():
 def balance():
     return render_template('add_transaction.html')
 
-
-from typing import Any
-from flask import request, jsonify
 
 @app.route('/new_operation.json', methods=['POST'])
 def new_operation():
