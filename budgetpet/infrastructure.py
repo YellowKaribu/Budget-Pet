@@ -1,13 +1,8 @@
 
-from budgetpet.constants import TRANSACTIONS_LOG_PATH, BUDGET_PATH, EXPENSE_CATEGORY
-from budgetpet.models import BudgetState, CancelledOperation
-import json
-import pymysql
+from budgetpet.models import BudgetState
 import mysql.connector
-import os
 from budgetpet.db import db_cursor
-from dataclasses import asdict
-from typing import Any, Literal
+from typing import Any
 from datetime import datetime, date
 from decimal import Decimal
 from budgetpet.models import (
@@ -16,30 +11,8 @@ from budgetpet.models import (
     GettingFromDbError, 
     MonthlyEventDBError, 
     OperationRecord)
-from budgetpet.messages import(
-    get_err_empty_input,
-    get_err_input_not_a_number,
-    get_err_invalid_input,
-    get_err_zero_amount,
-    get_msg_exit,
-    get_msg_success_logged,
-    get_msg_transaction_cancelled,
-    get_prompt_amount,
-    get_prompt_comment,
-    get_prompt_individual_entrepreneurship,
-    get_prompt_menu,
-    get_prompt_transaction_category,
-    get_prompt_transaction_type
-)
+
 from budgetpet.logger import logger
-
-
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "user": os.getenv("DB_USER", "admin"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME", "budget"),
-}
 
 
 def get_current_budget_state(cursor) -> BudgetState:
@@ -91,13 +64,6 @@ def save_budget_state(state: BudgetState, cursor) -> None:
         VALUES (%s, %s, %s, %s)
         '''
         cursor.execute(query_insert, values)
-
-
-def get_transaction_log() -> list[dict]:
-    with open(TRANSACTIONS_LOG_PATH, "r") as f:
-        lines = f.readlines()
-        entries = [json.loads(line) for line in lines if line.strip()]
-        return entries
     
 
 def get_monthly_events() -> list[dict]:
@@ -117,7 +83,7 @@ def get_monthly_events() -> list[dict]:
 
 
 def get_last_month_expense_statistic() -> tuple:
-    log_record = get_transaction_log()
+    log_record = get_operation_history()
     today = datetime.today()
 
     food_expense = Decimal("0")
@@ -132,35 +98,22 @@ def get_last_month_expense_statistic() -> tuple:
         target_month = today.month - 1
 
     for tr in log_record:
-        tr_date = datetime.strptime(tr["timestamp"], "%d-%m-%Y %H:%M:%S")
-        if tr_date.month == target_month and tr["type"] == "expense":
-            if tr["category"] == 1:
-                food_expense += Decimal(str(tr["amount"]))
-            elif tr["category"] == 2:
-                bills_expense += Decimal(str(tr["amount"]))
-            elif tr["category"] == 3:
-                drugs_expense += Decimal(str(tr["amount"]))
-            elif tr["category"] == 4:
-                games_expense += Decimal(str(tr["amount"]))
-            elif tr["category"] == 5:
-                other_expense += Decimal(str(tr["amount"]))
+        tr_date = tr.operation_date
+        if tr_date.month == target_month and tr.operation_type == "expense":
+            if tr.operation_category == 1:
+                food_expense += Decimal(str(tr.operation_amount))
+            elif tr.operation_category == 2:
+                bills_expense += Decimal(str(tr.operation_amount))
+            elif tr.operation_category == 3:
+                drugs_expense += Decimal(str(tr.operation_amount))
+            elif tr.operation_category == 4:
+                games_expense += Decimal(str(tr.operation_amount))
+            elif tr.operation_category == 5:
+                other_expense += Decimal(str(tr.operation_amount))
     
     total_expense = food_expense + bills_expense + drugs_expense + games_expense + other_expense
 
     return (food_expense, bills_expense, drugs_expense, games_expense, other_expense, total_expense)
-
-
-def save_meta_data(path: str, data: dict) -> None:
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-
-
-def load_json(path: str) -> Any:
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        raise ValueError("Meta file contains incorrect JSON.")
 
 
 def validate_meta_data(data: Any) -> dict:
@@ -180,147 +133,6 @@ def notify_monthly_events(statuses: dict[str, bool]) -> None:
     for key, value in statuses.items():
         if value:
             print(messages.get(key, f"Событие {key} выполнено."))
-
-
-def prompt_transaction_type() -> Literal["expense", "income"]:
-    """
-    Prompt the user to choose a transaction type:
-    '+' for income (with or without tax, clarified via a follow-up question),
-    '-' for expense.
-    """
-
-    while True:
-        user_input_type = input(get_prompt_transaction_type()).strip().lower()
-
-        if user_input_type == "+":
-            return "income"
-        elif user_input_type == "-":
-            return "expense"
-        elif user_input_type == "отмена":
-            raise CancelledOperation()
-            
-        print(get_err_invalid_input())
-
-
-def prompt_transaction_amount() -> str:
-    while True:
-        input_amount = input(get_prompt_amount()).strip()
-        # Replace comma with dot to support European number format (e.g., "1,2" → "1.2")
-        validated_input_amount = input_amount.replace(",", ".")
-
-        if not validated_input_amount:
-            print(get_err_empty_input())
-            continue
-
-        elif input_amount == "отмена":
-            raise CancelledOperation()
-
-        try:
-            amount = float(validated_input_amount)
-            if amount == 0:
-                print(get_err_zero_amount())
-                continue
-            return validated_input_amount
-        except ValueError:
-            print(get_err_input_not_a_number())
-            continue
-
-
-def prompt_transaction_category() -> str:
-    while True:
-        user_input = input(get_prompt_transaction_category()).strip()
-
-        if user_input in EXPENSE_CATEGORY:
-            return user_input
-        elif user_input == "отмена":
-            raise CancelledOperation()
-        print(get_err_invalid_input())
-
-
-def prompt_transaction_comment() -> str:
-        
-    user_input = input(get_prompt_comment()).strip()
-    if user_input == "отмена":
-        raise CancelledOperation()
-    
-    return user_input
-
-
-def prompt_tax_status() -> str:
-    while True:
-        user_input = input(get_prompt_individual_entrepreneurship()).strip().lower()
-
-        if user_input in ("да", "нет"):
-            return user_input
-        elif user_input == "отмена":
-            raise CancelledOperation()
-        
-        print(get_err_invalid_input())
-
-
-def show_budget_state(budget_state: BudgetState) -> None:
-    display_names = {
-    "reserve": "1. Резерв",
-    "available_funds": "2. Свободные средства",
-    "rent": "3. Аренда",
-    "taxes": "4. Отложено на налоги"
-    }
-
-    state = asdict(budget_state)
-    print ("Ваш текущий баланс:\n")
-    for key, value in state.items():
-        label = display_names.get(key, key)
-        print(f"{label}: {value}")
-
-
-def show_log_record(logs: list[dict]) -> None:
-    display_names = {
-        "id": "ID",
-        "date": "Дата",
-        "type": "Тип",
-        "amount": "Сумма",
-        "comment": "Коммент",
-        "category": "Категория",
-        "tax_status": "Налог"
-    }
-
-    for i, entry in enumerate(logs, 1):
-        parts = []
-        for key, display in display_names.items():
-            if key in entry:
-                value = entry[key]
-                if key == "category":
-                    value = EXPENSE_CATEGORY.get(value, "")
-                parts.append(f"{display}: {value}")
-        if parts:
-            print(f"{i:02d}. " + " | ".join(parts))
-        else:
-            print(f"{i:02d}. Запись не содержит известных полей: {entry}")
-
-
-def show_main_menu() -> None:
-    print("\nВыберите действие:")
-    print("1. Добавить транзакцию")
-    print("2. Показать баланс")
-    print("3. Показать лог операций")
-    print("4. Показать статистику расходов прошлого месяца")
-    print("0. Выход")
-
-
-def notify_exit() -> None:
-    print(get_msg_exit())
-
-
-def notify_invalid_choice() -> None:
-    print(get_err_invalid_input())
-
-
-def notify_success() -> None:
-    print(get_msg_success_logged())
-
-
-def notify_cancel() -> None:
-    print (get_msg_transaction_cancelled())
 
 
 def map_type_for_log(internal_type: str) -> str:

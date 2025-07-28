@@ -1,15 +1,13 @@
 from decimal import Decimal
 from budgetpet.logger import logger
 from typing import Literal, cast
-from datetime import datetime, date, time
-from budgetpet.models import (
-    OperationType, BudgetState, OperationData, TaxRate, LoggingError, MonthlyEvent
-)
-from budgetpet.constants import EXPENSE_CATEGORY, META_PATH, BUDGET_PATH, TRANSACTIONS_LOG_PATH
+from decimal import Decimal
+from datetime import datetime
+from datetime import datetime, date
+from budgetpet.models import (BudgetState, OperationData, TaxRate, LoggingError)
 from budgetpet.infrastructure import (
-    get_current_budget_state, save_budget_state, 
-    get_transaction_log, get_monthly_events, 
-    log_operation, update_monthly_event
+    get_current_budget_state, save_budget_state, get_monthly_events, 
+    log_operation, update_monthly_event, get_operation_history
     )
 from budgetpet.db import db_cursor
 
@@ -203,11 +201,11 @@ def monthly_recalculations(event_id) -> None:
 
 
 def calculate_last_month_income() -> Decimal:
-    log_record = get_transaction_log()
+    log_record = get_operation_history()
     total = Decimal("0")
     today = datetime.today()
 
-    #check if it's januar
+    # Определение предыдущего месяца и года
     if today.month == 1:
         target_month = 12
         target_year = today.year - 1
@@ -215,11 +213,12 @@ def calculate_last_month_income() -> Decimal:
         target_month = today.month - 1
         target_year = today.year
 
-    #parcing log file for previous transactions
+    # Проход по операциям и суммирование доходов за прошлый месяц
     for tr in log_record:
-        tr_date = datetime.strptime(tr["timestamp"], "%d-%m-%Y %H:%M:%S")
-        if tr_date.year == target_year and tr_date.month == target_month and tr["type"] == "income":
-            total += Decimal(str(tr["amount"]))
+        tr_date = tr.operation_date
+        if tr_date.year == target_year and tr_date.month == target_month and tr.operation_type == "income":
+            total += Decimal(str(tr.operation_amount))
 
-    return Decimal(total) * Decimal ('0.8')
+    return total * Decimal("0.8")
+
     

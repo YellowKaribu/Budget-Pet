@@ -1,48 +1,58 @@
 # Budget Pet
 
-**Budget Pet** is a CLI-based personal finance tracker, designed and built as a part of my practical Python learning. Its architecture is hexagonal (ports and adapters), allowing easy evolution and integration of new features as my skills grow.
+Budget Pet is a web-based personal finance tracker that uses a MySQL database for reliable data storage. Developed as part of my practical learning journey, this application provides an interactive interface to manage budgets, track income and expenses, and keep financial records organized.
+
+> ⚠️ **Warning:** This is a learning project in a very early and experimental stage. It is not a production-ready application. Expect incomplete features, unstable behavior, and a lot of rough edges — I'm building this as I learn.
+
 
 ---
 
-## Purpose
+Current Features
 
-Most budgeting tools are either bloated, too rigid, or disconnected from how I want to manage money. **Budget Pet** is intentionally minimalist, focused on:
+    Web interface for tracking income, expenses, and budget management.
 
-- clean distinction between personal and business income,
-- automatic tax reserve allocation,
-- category-based spending,
-- and now, extensibility for future technologies (e.g., MySQL, web interfaces).
+    Data stored reliably in a MySQL database.
 
----
+    Interactive pages to view transaction logs and current balance.
 
-## Current Features
+    Support for multiple expense categories with user-friendly labels.
 
-- CLI menu for income/expense tracking, log viewing, and balance display.
-- Separation of logic into core + adapters via hexagonal architecture.
-- Transaction logs stored in `.jsonl` format.
-- Expense categories mapped to human-readable labels.
+    Backend logic structured for scalability and maintainability.
 
----
+Architecture
 
-## Architecture
+Budget Pet is implemented as a web-based monolithic application with:
 
-Budget Pet now follows a **monolithic hexagonal architecture**, with:
+    backend built in Python handling business logic,
 
-- clear separation of core logic and infrastructure,
-- pure business logic in the core layer,
-- adapters for CLI input/output and JSONL storage,
-- easy future extension for MySQL, web servers, or automated imports.
+    MySQL database for persistent storage of budget state and transactions,
 
----
+    web server providing interactive frontend access,
 
-## Requirements
+    clear separation between core logic and infrastructure layers,
 
-- Python 3.11+
-- No external dependencies (yet)
+    designed for easy future expansion and feature additions.
+
+Requirements
+
+    Python 3.11+
+
+    MySQL server
 
 ---
 
-## Running the App
+## Running the Database and Web API
+
+Before using the app, ensure your MySQL database is running and properly configured.
+
+To start the backend web API server, run:
 
 ```bash
-python3 main.py
+python3 web_api.py
+```
+
+This will launch the web application locally. Open your browser and go to:
+
+```bash http://127.0.0.1:5000 ```
+
+(Adjust the port if your server uses a different one.)
