@@ -2,6 +2,9 @@
 
 Budget Pet is a web-based personal finance tracker that uses a MySQL database for reliable data storage. Developed as part of my practical learning journey, this application provides an interactive interface to manage budgets, track income and expenses, and keep financial records organized.
 
+> ⚠️ **Warning:** This is a learning project in a very early and experimental stage. It is not a production-ready application. Expect incomplete features, unstable behavior, and a lot of rough edges — I'm building this as I learn.
+
+
 ---
 
 Current Features
