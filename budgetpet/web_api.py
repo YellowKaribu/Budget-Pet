@@ -2,7 +2,6 @@ import os
 from budgetpet.logger import logger
 from decimal import Decimal
 from flask import Flask, jsonify, render_template, request, url_for, redirect
-from budgetpet.constants import BUDGET_PATH, TRANSACTIONS_LOG_PATH
 from budgetpet.infrastructure import get_current_budget_state, get_operation_history
 from budgetpet.application import process_new_operation, should_run_monthly_event
 from budgetpet.validators import valitate_new_operation_input

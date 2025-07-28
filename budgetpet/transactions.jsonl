@@ -1,3 +1,0 @@
-{"id": 1, "timestamp": "13-06-2025 17:48:03", "type": "income", "amount": "1000", "comment": "тест дохода в 1000", "category": null, "tax_status": "\u0434\u0430"}
-{"id": 2, "timestamp": "04-06-2025 17:48:03", "type": "expense", "amount": 79, "comment": "тест  расхода 06 месяца","category": 2, "tax_status": null}
-{"id": 3, "timestamp": "05-07-2025 17:48:03", "type": "expense", "amount": 50, "comment": "тест расхода 07 месяца","category": 5, "tax_status": null}
