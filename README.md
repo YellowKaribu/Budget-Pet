@@ -47,8 +47,8 @@ Before using the app, ensure your MySQL database is running and properly configu
 
 To start the backend web API server, run:
 
-```bash
-python3 web_api.py
+```
+python3 -m budgetpet.web_api
 ```
 
 This will launch the web application locally. Open your browser and go to:
