@@ -1,3 +1,8 @@
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -15,6 +20,8 @@ venv_mypy/
 
 # Pytest cache
 .pytest_cache/
+pytest.ini
+
 
 # Logs and runtime files
 *.log
