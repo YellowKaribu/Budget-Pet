@@ -1,5 +1,5 @@
 from budgetpet.infrastructure import get_monthly_events
-from budgetpet.constants import TRANSACTIONS_LOG_PATH, BUDGET_PATH, EXPENSE_CATEGORY
+from budgetpet.constants import EXPENSE_CATEGORY
 
 def test_print_last_executed_day():
     result = get_monthly_events()

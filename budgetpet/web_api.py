@@ -89,8 +89,7 @@ def statistics():
     return render_template('statistics.html')
 
 
-should_run_monthly_event()
-
 
 if __name__ == '__main__':
+    should_run_monthly_event()
     app.run(debug=True)
