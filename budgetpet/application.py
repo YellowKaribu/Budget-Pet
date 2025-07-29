@@ -142,33 +142,34 @@ def check_day_of_monthly_events(events: list[dict]) -> list:
 
         if last_executed.year != today.year or last_executed.month != today.month:
             events_to_run.append(event['id'])
-    
     return events_to_run
 
 
 def run_monthly_event(events_to_run: list) -> None:
-    if events_to_run == 1:
-        pay_rent(events_to_run)
-    elif events_to_run == 2:
-        monthly_recalculations(events_to_run)
+    if 1 in events_to_run:
+        pay_rent(1)
+    elif 2 in events_to_run:
+        monthly_recalculations(2)
 
 
 def should_run_monthly_event() -> None:
+    logger.info("Проверка ежемесячных ивентов...")
     try:
         events_data = get_monthly_events()
         events_to_run = check_day_of_monthly_events(events_data)
         if events_to_run:
             run_monthly_event(events_to_run)
+            logger.info("Ивент запущен, номер: %s", events_to_run)
     except Exception as e:
         logger.error('Ошибка при проверке ежемесячных ивентов: %s', e)
         raise
 
 
-def pay_rent(event_id) -> None:
+def pay_rent(event_id: int) -> None:
     try:
         with db_cursor() as cursor:
             current_balance = get_current_budget_state(cursor)
-            updated_state = current_balance.model_copy(update={'operation_rent': Decimal('0')})
+            updated_state = current_balance.model_copy(update={'rent': Decimal('0')})
             save_budget_state(updated_state, cursor)
 
             last_executed_update = date.today()
