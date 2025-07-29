@@ -15,24 +15,79 @@ function renderPage(page) {
     return;
   }
 
+  const table = document.createElement('table');
+  table.className = 'balance_table';
+
+  // Заголовки
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr>
+      <th>ID</th>
+      <th>Дата</th>
+      <th>Тип</th>
+      <th>Сумма</th>
+      <th>Комментарий</th>
+      <th>Категория</th>
+      <th>Налог</th>
+      <th>Действия</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  // Строки данных
+  const tbody = document.createElement('tbody');
   pageData.forEach(transaction => {
-    const p = document.createElement('p');
-    p.className = 'transaction';
-    if (transaction.operation_type.startsWith('income')) p.classList.add('income');
+  let rawDate = transaction.operation_date;
+  if (rawDate.includes(',')) {
+    rawDate = rawDate.split(',')[1].trim();
+  }
+  const dateStr = rawDate.split(':').slice(0, 2).join(':');
 
-    p.textContent = `ID: ${transaction.id}, Дата: ${transaction.operation_date}, Тип: ${transaction.operation_type}, Сумма: ${transaction.operation_amount}, Комментарий: ${transaction.operation_comment || 'Нет комментария'}`;
+  // Добавляем смайлик по типу операции
+  let typeText = '';
+  if (transaction.operation_type.startsWith('income')) {
+    typeText = '💰 ' + transaction.operation_type;
+  } else if (transaction.operation_type.startsWith('expense')) {
+    typeText = '🛒 ' + transaction.operation_type;
+  } else {
+    typeText = transaction.operation_type;
+  }
 
-    if (transaction.operation_type === 'expense') {
-      p.textContent += `, Категория: ${transaction.operation_category || 'Нет категории'}`;
-    } else {
-      p.textContent += `, Налоговый статус: ${transaction.operation_tax_status || 'Нет статуса'}`;
-    }
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${transaction.id}</td>
+    <td>${dateStr}</td>
+    <td>${typeText}</td>
+    <td>${transaction.operation_amount}</td>
+    <td>${transaction.operation_comment || '—'}</td>
+    <td>${transaction.operation_category || '—'}</td>
+    <td>${transaction.operation_tax_status || '—'}</td>
+    <td>
+      <button class="edit-btn" data-id="${transaction.id}">✏️</button>
+      <button class="delete-btn" data-id="${transaction.id}">🗑️</button>
+    </td>
+  `;
 
-    container.appendChild(p);
-  });
+  // Класс для покраски строк
+  if (transaction.operation_type.startsWith('income')) {
+    row.classList.add('income');
+  } else if (transaction.operation_type.startsWith('expense')) {
+    row.classList.add('expense');
+  }
+
+  tbody.appendChild(row);
+});
+
+
+  table.appendChild(tbody);
+  container.appendChild(table);
 
   updatePaginationControls();
 }
+
+
+
+
 
 function updatePaginationControls() {
   const totalPages = Math.ceil(allTransactions.length / itemsPerPage);

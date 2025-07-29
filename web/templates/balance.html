@@ -10,41 +10,40 @@ BP Баланс
 {% endblock %}
 
 {% block content %}
-<form id="balance_form">
+<form id="balance_form" class="balance_form">
   <table class="balance_table">
     <thead>
       <tr>
-        <th></th>
-        <th>Баланс</th>
-        <th>Изменить</th>
+        <th>Параметр</th>
+        <th>Текущее значение</th>
+        <th>Изменить на</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Резерв:</td>
+        <td>Резерв</td>
         <td><span id="reserve_state">0</span></td>
-        <td><input type="number" step="0.01" id="reserve_input"></td>
+        <td><input type="number" step="0.01" id="reserve_input" /></td>
       </tr>
       <tr>
-        <td>Свободные деньги:</td>
+        <td>Свободные деньги</td>
         <td><span id="available_funds_state">0</span></td>
-        <td><input type="number" step="0.01" id="available_funds_input"></td>
+        <td><input type="number" step="0.01" id="available_funds_input" /></td>
       </tr>
       <tr>
-        <td>Аренда:</td>
+        <td>Аренда</td>
         <td><span id="rent_state">0</span></td>
-        <td><input type="number" step="0.01" id="rent_input"></td>
+        <td><input type="number" step="0.01" id="rent_input" /></td>
       </tr>
       <tr>
-        <td>Налоги:</td>
+        <td>Налоги</td>
         <td><span id="taxes_state">0</span></td>
-        <td><input type="number" step="0.01" id="taxes_input"></td>
+        <td><input type="number" step="0.01" id="taxes_input" /></td>
       </tr>
     </tbody>
   </table>
-  <button type="submit">Принять</button>
+  <button type="submit" class="submit_btn">Принять</button>
 </form>
-
-
 {% endblock %}
+
 

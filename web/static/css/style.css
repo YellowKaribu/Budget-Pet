@@ -257,16 +257,15 @@ h1 a {
 }
 
 .balance_table {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  border-collapse: collapse;
+  width: 100%; /* растянуть в ширину */
+  max-width: none; /* если был max-width - отключить */
+  border-collapse: collapse; /* убрать двойные границы */
   color: #fff;
 }
 
 .balance_table th,
 .balance_table td {
-  padding: 0.5em 0.75em;
+  padding: 0.25em 0.5em; /* меньше отступов по вертикали и горизонтали */
   text-align: left;
   vertical-align: middle;
 }
@@ -283,4 +282,115 @@ h1 a {
   text-align: right;
   border-radius: 4px;
   border: 1px solid #ccc;
+}
+
+.balance_table td:nth-child(4),
+.balance_table th:nth-child(4) {
+  text-align: right;
+}
+
+
+
+.balance_table tbody tr {
+  border-bottom: 1px solid #444; /* тёмная разделительная линия */
+}
+
+.edit-btn, .delete-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 1em;
+  margin-right: 4px;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  color: #fff;
+}
+
+.balance_table {
+  font-size: 0.75em;
+}
+
+
+.balance_table tr.income {
+  background-color: #254734; /* тёмно-зелёный фон */
+  color: #a0fca0; /* ярко-зелёный текст */
+}
+
+.balance_table tr.expense {
+  background-color: #2f2e2e; /* тёмно-красный фон */
+  color: #e0d8d8; /* ярко-красный текст */
+}
+
+.balance_form {
+  max-width: 600px;
+  margin: 20px auto;
+  background-color: #2b2a2a;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.6);
+}
+
+.balance_table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #b6b6b6;
+}
+
+.balance_table th,
+.balance_table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #444;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.balance_table th {
+  background-color: #3b3a3a;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.balance_table td:nth-child(2) {
+  text-align: right;
+  font-weight: 500;
+}
+
+.balance_table td:nth-child(3) {
+  text-align: right;
+}
+
+.balance_table input[type="number"] {
+  width: 100%;
+  max-width: 150px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #1e1e1e;
+  color: #eee;
+  font-size: 1rem;
+}
+
+.submit_btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #3b3f92;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit_btn:hover {
+  background-color: #5d62c5;
+}
+
+
+input[type=number] {
+  -moz-appearance: textfield; /* Для Firefox */
+  -webkit-appearance: textfield; /* Для Chrome, Safari, Edge */
+  appearance: textfield; /* Стандартное свойство для будущей совместимости */
 }
