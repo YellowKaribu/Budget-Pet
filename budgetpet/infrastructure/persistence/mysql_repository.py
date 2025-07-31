@@ -18,32 +18,56 @@ def map_row_to_record(row: dict) -> Operation:
 
 class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRepository):
     #-------Budget--------
-    def save_budget_state(self, state: BudgetState) -> None:
-        with get_db_cursor() as cursor:
-            query = '''
+    def save_budget_state(self, state: BudgetState, cursor) -> None:
+        query = '''
             UPDATE budget_state
             SET reserve=%s, available_funds=%s, rent=%s, taxes=%s
             LIMIT 1
-            '''
-            values = (state.reserve, state.available_funds, state.rent, state.taxes)
-            cursor.execute(query, values)
+        '''
+        values = (state.reserve, state.available_funds, state.rent, state.taxes)
 
-    def get_current_budget_state(self) -> BudgetState:
-        with get_db_cursor() as cursor:
-            cursor.execute("SELECT * FROM budget_state LIMIT 1")
+        if cursor is not None:
+            cursor.execute(query, values)
+        else:
+            with get_db_cursor() as cursor:
+                cursor.execute(query, values)
+
+
+    def get_current_budget_state(self, cursor) -> BudgetState:
+        query = "SELECT * FROM budget_state LIMIT 1"
+
+        if cursor is not None:
+            cursor.execute(query)
             row = cursor.fetchone()
-            if not row:
-                raise RuntimeError("No budget state found")
-            return BudgetState(**row) #type: ignore
+        else:
+            with get_db_cursor() as cursor:
+                cursor.execute(query)
+                row = cursor.fetchone()
+
+        if not row:
+            raise RuntimeError("No budget state found")
+
+        return BudgetState(**row)  # type: ignore
         
+
     #-------Operations--------
     def get_operation_history_from_db(self) -> List[Any]:
         with get_db_cursor() as cursor:
             cursor.execute("SELECT * FROM operations_history ORDER BY timestamp DESC LIMIT 100")
             rows = cursor.fetchall()
             return [map_row_to_record(row) for row in rows] #type: ignore
+        
 
-    def add_operation(self, operation_data: dict) -> None:
+    def get_operation_by_id(self, operation_id: int, cursor) -> Operation:
+        query = "SELECT * FROM operations_history WHERE id = %s"
+        cursor.execute(query, (operation_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise ValueError(f"Operation with id={operation_id} not found")
+        return map_row_to_record(row)
+
+
+    def add_operation_history(self, operation_data: dict, cursor) -> None:
         query = '''
             INSERT INTO operations_history (timestamp, type, amount, comment, category, tax_rate)
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -56,9 +80,13 @@ class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRep
             operation_data.get('category'),
             operation_data.get('tax_rate')
         )
-        
-        with get_db_cursor() as cursor:
+        if cursor is None:
+            with get_db_cursor() as cursor:
+                cursor.execute(query, values)
+
+        else:
             cursor.execute(query, values)
+
 
     def edit_operation(self, operation_id: int, operation_data: dict) -> None:
         with get_db_cursor() as cursor:
@@ -85,11 +113,11 @@ class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRep
             except Exception as e:
                 raise LoggingError(f"Ошибка при редактировании операции: {e}")
 
-    def delete_operation(self, operation_id: int) -> None:
-        with get_db_cursor() as cursor:
-            cursor.execute("DELETE FROM operations_history WHERE id = %s", (operation_id,))
-            if cursor.rowcount == 0:
-                raise RuntimeError(f"Operation with id {operation_id} not found")
+
+    def delete_operation(self, operation_id: int, cursor) -> None:
+        cursor.execute("DELETE FROM operations_history WHERE id = %s", (operation_id,))
+        if cursor.rowcount == 0:
+            raise RuntimeError(f"Operation with id {operation_id} not found")
             
     #-------Events--------
     def get_monthly_events(self) -> list[dict]:
@@ -99,6 +127,7 @@ class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRep
             '''
             cursor.execute(query)
             return cursor.fetchall() #type: ignore
+
 
     def update_monthly_event(self, event_id: int, last_executed: date) -> None:
         with get_db_cursor() as cursor:
@@ -112,6 +141,7 @@ class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRep
                 cursor.execute(query, values)
             except Exception as e:
                 raise MonthlyEventDBError(f"Ошибка при сохранении данных ежемес. ивентов: {e}")
+
 
     @staticmethod
     def _map_type_for_log(internal_type: str) -> str:

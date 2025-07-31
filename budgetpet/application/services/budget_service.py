@@ -22,14 +22,14 @@ class BudgetService:
                 rent=Decimal(str(data['rent'])),
                 taxes=Decimal(str(data['taxes']))
             )
-            self.repository.save_budget_state(state)
+            self.repository.save_budget_state(state, cursor=None)
         except (InvalidOperation, ValueError, TypeError) as e:
             self.logger.error(f"Invalid budget state data: {e}")
             raise ValueError("Invalid data format")
 
     def get_budget_state(self) -> BudgetState:
         try:
-            return self.repository.get_current_budget_state()
+            return self.repository.get_current_budget_state(cursor=None)
         except Exception as e:
             self.logger.error(f"Error fetching budget state: {e}")
             raise

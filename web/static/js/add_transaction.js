@@ -68,6 +68,7 @@ function setupFormSubmitHandler() {
       if (response.ok) {
         alert('Операция успешно добавлена');
         form.reset();
+        location.reload();
       } else {
         alert('Ошибка: ' + (result.error || 'Неизвестная ошибка'));
       }

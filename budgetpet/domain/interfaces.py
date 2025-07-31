@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from budgetpet.domain.models import BudgetState
+from budgetpet.domain.models import BudgetState, Operation
 from typing import List, Any, Dict
 from datetime import date
 from typing import Optional, Any
@@ -24,7 +24,11 @@ class IOperationsRepository(ABC):
 
 
     @abstractmethod
-    def add_operation(self, operation_data: dict, cursor: Optional[Any] = None) -> None:
+    def get_operation_by_id(self, operation_id: int, cursor) -> Operation:
+        pass
+
+    @abstractmethod
+    def add_operation_history(self, operation_data: dict, cursor: Optional[Any] = None) -> None:
         pass
 
 
@@ -34,7 +38,7 @@ class IOperationsRepository(ABC):
 
 
     @abstractmethod
-    def delete_operation(self, operation_id: int) -> None:
+    def delete_operation(self, operation_id: int, cursor) -> None:
         pass
 
 class IEventsRepository(ABC):
@@ -69,23 +73,4 @@ class ILogger(ABC):
     def info(self, message: str) -> None:
         pass
 
-
-class IOperationService(ABC):
-    @abstractmethod
-    def get_operations_history(self, cursor) -> list[dict]:
-        pass
-
-
-    @abstractmethod
-    def add_operation(self, data: dict, cursor) -> None:
-        pass
-
-
-    @abstractmethod
-    def edit_operation(self, operation_id: int, data: dict, cursor) -> None:
-        pass
-
-
-    @abstractmethod
-    def delete_operation(self, operation_id: int, cursor) -> None:
         pass 
