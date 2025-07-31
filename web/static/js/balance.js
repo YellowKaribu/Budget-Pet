@@ -34,18 +34,21 @@ async function fetch_and_render_balance() {
   try {
     const response = await fetch('/budget_state.json');
     if (!response.ok) throw new Error('Ошибка запроса');
+
     const data = await response.json();
+    const balance = data.balance;
 
-    document.getElementById('reserve_state').textContent = data.reserve || 0;
-    document.getElementById('available_funds_state').textContent = data.available_funds || 0;
-    document.getElementById('rent_state').textContent = data.rent || 0;
-    document.getElementById('taxes_state').textContent = data.taxes || 0;
+    document.getElementById('reserve_state').textContent = balance.reserve ?? '0.00';
+    document.getElementById('available_funds_state').textContent = balance.available_funds ?? '0.00';
+    document.getElementById('rent_state').textContent = balance.rent ?? '0.00';
+    document.getElementById('taxes_state').textContent = balance.taxes ?? '0.00';
 
-    document.getElementById('reserve_input').value = data.reserve || 0;
-    document.getElementById('available_funds_input').value = data.available_funds || 0;
-    document.getElementById('rent_input').value = data.rent || 0;
-    document.getElementById('taxes_input').value = data.taxes || 0;
+    document.getElementById('reserve_input').value = balance.reserve ?? '0.00';
+    document.getElementById('available_funds_input').value = balance.available_funds ?? '0.00';
+    document.getElementById('rent_input').value = balance.rent ?? '0.00';
+    document.getElementById('taxes_input').value = balance.taxes ?? '0.00';
   } catch (error) {
     console.error('Ошибка:', error);
   }
 }
+
