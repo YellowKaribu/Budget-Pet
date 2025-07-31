@@ -3,66 +3,64 @@
 
 {% block content %}
 <h3>Добавление транзакций</h3>
-  <form id="operation-form" method="POST" action="/new_operation.json">
-
-    <label for="operation_date">Дата операции:</label>
-    <input type="date" id="operation_date" name="operation_date"/>
-
-    <br>
-
-    <label>
-      Тип транзакции:
-      <div class="toggle-group">
-        <label class="toggle-option">
-          <input type="radio" name="type" id="expense" value="expense" class="toggle-input" checked>
-          Расход
-        </label>
-        <label class="toggle-option">
-          <input type="radio" name="type" id="income" value="income" class="toggle-input" required>
-          Доход
-        </label>
-      </div>
-
-    </label>
-    <br>
-
-    <label>
-      Доход от ИП?
-      <select name="income_from_ip" id="tax_status" disabled>
-        <option value="yes">Да</option>
-        <option value="no" selected>Нет</option>
-      </select>
-    </label>
-    <br>
-
-    <label>
-      Категория:
-      <select name="category" id="categorySelect" disabled>
-        <option value="1">Еда</option>
-        <option value="2">Коммуналка</option>
-        <option value="3">Лекарства</option>
-        <option value="4">Развлечения</option>
-        <option value="5">Прочее</option>
-      </select>
-    </label>
-    <br>
-
-    <label>
-      Сумма:
-      <input type="number" name="amount" step="0.01" required>
-    </label>
-    <br>
-
-    <label>
-      Комментарий:
-      <textarea name="comment" rows="3"></textarea>
-    </label>
-    <br>
-
-  <button type="submit">Принять</button>
-  <button type="reset">Очистить</button>
-
+  <form id="operation-form" class="balance_form">
+  <table class="balance_table">
+    <thead>
+      <tr>
+        <th>Параметр</th>
+        <th>Значение</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Дата</td>
+        <td><input type="date" name="date" id="date"></td>
+      </tr>
+      <tr>
+        <td>Тип транзакции</td>
+        <td>
+          <div class="toggle-group">
+            <label class="toggle-option">
+              <input type="radio" name="type" id="expense" value="expense" class="toggle-input" checked>
+              Расход
+            </label>
+            <label class="toggle-option">
+              <input type="radio" name="type" id="income" value="income" class="toggle-input" required>
+              Доход
+            </label>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>Категория</td>
+        <td>
+          <select name="category" id="category">
+            <option value="Доход">Доход</option>
+            <option value="Еда">Еда</option>
+            <option value="Коммуналка">Коммуналка</option>
+            <option value="Лекарства">Лекарства</option>
+            <option value="Развлечения">Развлечения</option>
+            <option value="Прочее">Прочее</option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td>Сумма</td>
+        <td><input type="number" name="amount" id="amount" step="0.01" required></td>
+      </tr>
+      <tr>
+        <td>Налог (%)</td>
+        <td><input type="number" name="tax_rate" id="tax_rate" step="0.01" disabled></td>
+      </tr>
+      <tr>
+        <td>Комментарий</td>
+        <td><input type="text" name="comment" id="comment"></td>
+      </tr>
+    </tbody>
+  </table>
+  <button type="submit" class="submit_btn">Добавить операцию</button>
 </form>
+
 {% endblock %}
 
 {% block js %}<script src="{{ url_for('static', filename='js/add_transaction.js') }}"></script>{% endblock %}

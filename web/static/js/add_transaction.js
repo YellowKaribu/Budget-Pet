@@ -8,8 +8,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function setupToggleOptions() {
   const incomeRadio = document.getElementById("income");
   const expenseRadio = document.getElementById("expense");
-  const incomeFromIP = document.getElementById("tax_status");
-  const categorySelect = document.getElementById("categorySelect");
+  const incomeFromIP = document.getElementById("tax_rate");
+  const categorySelect = document.getElementById("category");
   const incomeLabel = incomeRadio?.closest('.toggle-option');
   const expenseLabel = expenseRadio?.closest('.toggle-option');
 
@@ -18,17 +18,14 @@ function setupToggleOptions() {
   function updateFieldStates() {
     if (incomeRadio.checked) {
       incomeFromIP.disabled = false;
-      categorySelect.disabled = true;
       incomeLabel.classList.add('selected');
       expenseLabel.classList.remove('selected');
     } else if (expenseRadio.checked) {
       incomeFromIP.disabled = true;
-      categorySelect.disabled = false;
       incomeLabel.classList.remove('selected');
       expenseLabel.classList.add('selected');
     } else {
       incomeFromIP.disabled = true;
-      categorySelect.disabled = true;
       incomeLabel.classList.remove('selected');
       expenseLabel.classList.remove('selected');
     }
@@ -47,13 +44,13 @@ function setupFormSubmitHandler() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const dateInput = form.operation_date;
+    const dateInput = form.date;
     const dateValue = dateInput.value ? dateInput.value : null;
 
     const data = {
-      operation_date: dateValue,
+      date: dateValue,
       type: form.type.value,
-      tax_status: form.tax_status.value,
+      tax_rate: form.tax_rate.disabled ? 0 : Number(form.tax_rate.value),
       category: form.category.value,
       amount: form.amount.value,
       comment: form.comment.value

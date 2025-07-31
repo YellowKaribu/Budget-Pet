@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}
+BP Лог
+{% endblock %}
+
+{% block content %}
+<div class="log-block" id="transaction-log">
+  <h2>Лог транзакций</h2>
+  <div id="transactions"></div>
+  <div id="pagination-controls" style="margin-top: 1em;"></div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/operations-history.js') }}"></script>
+{% endblock %}
