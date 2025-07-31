@@ -39,6 +39,17 @@ def create_app(services: dict) -> Flask:
         return render_template('operations-history.html')
 
 
+    @app.route('/delete_operation/<int:operation_id>', methods=["POST"])
+    def delete_operation(operation_id):
+        try:
+            operation_service = app.config['services']['operations']
+            operation_service.delete_operation(operation_id)
+            return jsonify({'ok': True})
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+    
+
+
     @app.route('/budget_state.json')
     def budget_state_json():
         try:
