@@ -62,7 +62,7 @@ function renderPage(page) {
       <td>${transaction.operation_amount}</td>
       <td class="comment" title="${comment.replace(/"/g, '&quot;')}">${displayComment}</td>
       <td>${transaction.operation_category || '—'}</td>
-      <td>${transaction.operation_tax_status || '—'}</td>
+      <td>${transaction.operation_tax_rate || '—'}</td>
       <td>
         <button class="edit-btn" data-id="${transaction.id}" data-transaction='${JSON.stringify(transaction)}'>✏️</button>
         <button class="delete-btn" data-id="${transaction.id}">🗑️</button>
@@ -130,8 +130,7 @@ function showEditModal(transaction) {
         </label>
         <label>Тип:
           <select name="operation_type" required>
-            <option value="income_with_tax" ${transaction.operation_type === 'income_with_tax' ? 'selected' : ''}>Доход (с налогом)</option>
-            <option value="income_no_tax" ${transaction.operation_type === 'income_no_tax' ? 'selected' : ''}>Доход (без налога)</option>
+            <option value="income" ${transaction.operation_type === 'income' ? 'selected' : ''}>Доход</option>
             <option value="expense" ${transaction.operation_type === 'expense' ? 'selected' : ''}>Расход</option>
           </select>
         </label>
@@ -140,22 +139,20 @@ function showEditModal(transaction) {
         </label>
         <label>Категория (для расходов):
           <select name="operation_category">
-            <option value="" ${!transaction.operation_category ? 'selected' : ''}>Нет</option>
-            <option value="1" ${transaction.operation_category === 1 ? 'selected' : ''}>Еда</option>
-            <option value="2" ${transaction.operation_category === 2 ? 'selected' : ''}>Счета</option>
-            <option value="3" ${transaction.operation_category === 3 ? 'selected' : ''}>Лекарства</option>
-            <option value="4" ${transaction.operation_category === 4 ? 'selected' : ''}>Игры</option>
-            <option value="5" ${transaction.operation_category === 5 ? 'selected' : ''}>Другое</option>
+            <option value="Доход" ${!transaction.operation_category ? 'selected' : ''}>Доход</option>
+            <option value="Еда" ${transaction.operation_category === 1 ? 'selected' : ''}>Еда</option>
+            <option value="Коммуналка" ${transaction.operation_category === 2 ? 'selected' : ''}>Коммуналка</option>
+            <option value="Лекарства" ${transaction.operation_category === 3 ? 'selected' : ''}>Лекарства</option>
+            <option value="Развлечения" ${transaction.operation_category === 4 ? 'selected' : ''}>Развлечения</option>
+            <option value="Прочее" ${transaction.operation_category === 5 ? 'selected' : ''}>Прочее</option>
           </select>
         </label>
         <label>Комментарий:
           <input type="text" name="operation_comment" value="${transaction.operation_comment || ''}">
         </label>
-        <label>Налоговый статус (для доходов):
-          <select name="operation_tax_status">
-            <option value="no" ${transaction.operation_tax_status === 'no' ? 'selected' : ''}>Без налога</option>
-            <option value="taxed" ${transaction.operation_tax_status === 'taxed' ? 'selected' : ''}>С налогом</option>
-          </select>
+        <label>Налог:
+          <input type="number" name="operation_tax_rate" step="0.01" value="${transaction.operation_tax_rate}" required>
+        </label>
         </label>
         <button type="submit">Сохранить</button>
       </form>
@@ -173,26 +170,38 @@ function showEditModal(transaction) {
       operation_amount: parseFloat(formData.get('operation_amount')),
       operation_category: formData.get('operation_category') || null,
       operation_comment: formData.get('operation_comment') || null,
-      operation_tax_status: formData.get('operation_tax_status')
+      operation_tax_rate: formData.get('operation_tax_rate')
     };
 
     try {
-      const response = await fetch(`/edit_operation/${transaction.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const result = await response.json();
-      if (result.ok) {
-        alert('Транзакция обновлена!');
-        modal.remove();
-        await fetch_and_render_transactions_log();
-      } else {
-        alert(`Ошибка: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Ошибка: ${error}`);
-    }
+      console.log('off')
+  const response = await fetch(`/edit_operation.json`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: transaction.id,
+      date: data.operation_date,
+      type: data.operation_type,
+      amount: data.operation_amount,
+      category: data.operation_category,
+      tax_rate: data.operation_tax_rate,
+      comment: data.operation_comment
+    })
+  });
+
+  const result = await response.json();
+
+  if (result.status === 'success') {
+    alert('Транзакция обновлена!');
+    modal.remove();
+    await fetch_and_render_transactions_log();
+  } else {
+    alert(`Ошибка: ${result.error}`);
+  }
+} catch (error) {
+  alert(`Ошибка: ${error}`);
+}
+
   });
 
   modal.querySelector('.close-btn').addEventListener('click', () => {
