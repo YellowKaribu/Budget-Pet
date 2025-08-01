@@ -1,5 +1,7 @@
+from decimal import Decimal
 import os
-from budgetpet.domain.models import OperationDTO, Operation
+import traceback
+from budgetpet.domain.models import OperationDTO, Operation, StatisticFilters
 from flask import Flask, jsonify, render_template, request
 from pydantic import ValidationError
 
@@ -29,6 +31,28 @@ def create_app(services: dict) -> Flask:
     @app.route('/statistics')
     def statistic_page():
         return render_template('statistics.html')
+    
+    @app.route('/api/statistics', methods=['POST'])
+    def get_statistic():
+        try:
+            filters_data = request.get_json()
+            user_filters = StatisticFilters(**filters_data)
+
+            statistic_service = app.config['services']['statistic']
+            summary = statistic_service.get_statistic(user_filters)
+
+            total = sum(Decimal(row['total']) for row in summary)
+            print("Summary rows:", summary)
+            print("Total sum calculated:", total)
+
+            return jsonify({
+            'summary': summary,
+            'total': str(total)
+        })
+        except Exception as e:
+            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
+        
 
     @app.route('/operations-history')
     def operations_log():
@@ -121,7 +145,6 @@ def create_app(services: dict) -> Flask:
     @app.route('/edit_operation.json', methods=['POST'])
     def edit_operation():
         json_data = request.get_json()
-        print(json_data)
 
         try:
             dto_data = OperationDTO(**json_data)

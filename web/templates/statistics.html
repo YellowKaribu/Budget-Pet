@@ -4,6 +4,49 @@
 BP Статистика
 {% endblock %}
 
+{% block content %}
+<h3>Фильтры статистики</h3>
+<form id="statistics-form" class="balance_form">
+  <table class="balance_table">
+    <tbody>
+      <tr>
+        <td><label for="start-date">Начало периода:</label></td>
+        <td><input type="date" id="start-date" name="start_date"></td>
+      </tr>
+      <tr>
+        <td><label for="end-date">Конец периода:</label></td>
+        <td><input type="date" id="end-date" name="end_date"></td>
+      </tr>
+      <tr>
+        <td>Тип операции:</td>
+        <td>
+          <label><input type="checkbox" name="type" value="income" checked> Доход</label>
+          <label><input type="checkbox" name="type" value="expense" checked> Расход</label>
+        </td>
+      </tr>
+      <tr>
+        <td>Категории:</td>
+        <td class="category-checkboxes">
+          <label><input type="checkbox" name="category" value="Доход" checked> Доход</label>
+          <label><input type="checkbox" name="category" value="Еда" checked> Еда</label>
+          <label><input type="checkbox" name="category" value="Коммуналка" checked> Коммуналка</label>
+          <label><input type="checkbox" name="category" value="Лекарства" checked> Лекарства</label>
+          <label><input type="checkbox" name="category" value="Развлечения" checked> Развлечения</label>
+          <label><input type="checkbox" name="category" value="Прочее" checked> Прочее</label>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="text-align: center; margin-top: 1em;">
+    <button type="submit" class="edit-btn">Показать статистику</button>
+  </div>
+</form>
+
+<div id="statistics-result" class="balance_form" style="margin-top: 2em;">
+  <!-- Здесь будет рендер статистики -->
+</div>
+{% endblock %}
 
 {% block js %}
 <script src="{{ url_for('static', filename='js/statistics.js') }}"></script>

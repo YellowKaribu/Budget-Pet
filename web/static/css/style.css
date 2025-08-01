@@ -1,6 +1,6 @@
 body {
-    margin: 10vh;
-    padding: 20px;
+    margin: 5vh;
+    padding: 10px;
     background-color: #1e1e1e;
     color: #b6b6b6;
     font-family: sans-serif;
@@ -15,8 +15,8 @@ a.header-link {
 
 .header {
     background-color: #181818;
-    height: 20vh;
-    padding: 10px;
+    height: 10vh;
+    padding: 5px;
 }
 
 .footer {
@@ -420,4 +420,63 @@ h1{
 
 h3{
     padding-left: 15%;
+}
+
+/* Обёртка под таблицу фильтров и результат */
+#statistics-result {
+  font-size: 0.85em;
+}
+
+/* Стилизация multiselect под остальной стиль */
+#categories {
+  background-color: #1e1e1e;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* Поддержка селекта в таблице */
+.balance_table select {
+  font-size: 0.9em;
+}
+
+/* Поддержка чекбоксов в таблице */
+.balance_table input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Стилизация кнопки "Показать статистику" */
+#statistics-form button[type="submit"] {
+  background-color: #3b3f92;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  transition: background-color 0.3s ease;
+}
+
+#statistics-form button[type="submit"]:hover {
+  background-color: #5d62c5;
+}
+
+/* Адаптация таблицы с результатами */
+#statistics-result table td {
+  font-size: 1em;
+  padding: 8px;
+}
+
+#statistics-result table td:nth-child(2) {
+  text-align: right;
+}
+.category-checkboxes label {
+  display: inline-block;
+  margin-right: 12px;
+  margin-bottom: 4px;
 }
