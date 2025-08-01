@@ -1,5 +1,5 @@
 from budgetpet.domain.interfaces import IBudgetRepository, IOperationsRepository, IEventsRepository
-from budgetpet.domain.models import BudgetState, MonthlyEventDBError, LoggingError, Operation
+from budgetpet.domain.models import BudgetState, MonthlyEventDBError, LoggingError, Operation, StatisticFilters
 from budgetpet.infrastructure.persistence.db_connection import get_db_cursor
 from typing import List, Any, Dict
 from datetime import date
@@ -119,6 +119,43 @@ class MySQLBudgetRepository(IBudgetRepository, IOperationsRepository, IEventsRep
         else:
             cursor.execute(query, values)
 
+    def get_statistic_from_db(self, user_filters: StatisticFilters) -> List[Any]:
+        query = '''
+        SELECT category, SUM(amount) as total
+        FROM operations_history
+        WHERE 1=1
+        '''
+        params = []
+
+        if user_filters.start_date:
+            query += ' AND timestamp >= %s'
+            params.append(user_filters.start_date)
+
+        
+        if user_filters.end_date:
+            query += ' AND timestamp <= %s'
+            params.append(user_filters.end_date)
+
+
+        if user_filters.types:
+                placeholders = ','.join(['%s'] * len(user_filters.types))
+                query += f" AND type IN ({placeholders})"
+                params.extend(user_filters.types)
+
+        if user_filters.categories:
+            placeholders = ','.join(['%s'] * len(user_filters.categories))
+            query += f" AND category IN ({placeholders})"
+            params.extend(user_filters.categories)
+
+        query += " GROUP BY category ORDER BY total DESC"
+
+        with get_db_cursor() as cursor:
+                cursor.execute(query, tuple(params))
+                return [
+                    {'category': row['category'], 'total': str(row['total'])} #type: ignore
+                    for row in cursor.fetchall()
+                ]
+        
 
     #-------Events--------
     def get_monthly_events(self) -> list[dict]:

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from budgetpet.domain.models import BudgetState, Operation
+from budgetpet.domain.models import BudgetState, Operation, StatisticFilters
 from typing import List, Any, Dict
 from datetime import date
 from typing import Optional, Any
@@ -34,6 +34,10 @@ class IOperationsRepository(ABC):
 
     @abstractmethod
     def update_operation(self, new_data: dict, cursor) -> None:
+        pass
+
+    @abstractmethod
+    def get_statistic_from_db(self, user_filters: StatisticFilters) -> List[Any]:
         pass
 
 class IEventsRepository(ABC):
