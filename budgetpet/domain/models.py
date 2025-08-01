@@ -104,7 +104,6 @@ class OperationDTO(BaseModel):
             tax_rate=self.tax_rate,
             comment=self.comment,
         )
-    
 
 class StatisticFilters(BaseModel):
     start_date: date | None = None

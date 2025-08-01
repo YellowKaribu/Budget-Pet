@@ -1,58 +1,60 @@
 # Budget Pet
 
-Budget Pet is a web-based personal finance tracker that uses a MySQL database for reliable data storage. Developed as part of my practical learning journey, this application provides an interactive interface to manage budgets, track income and expenses, and keep financial records organized.
+**This is a personal pet project (financial tracker) built for educational purposes.**
 
-> ⚠️ **Warning:** This is a learning project in a very early and experimental stage. It is not a production-ready application. Expect incomplete features, unstable behavior, and a lot of rough edges — I'm building this as I learn.
+This project was developed to meet some custom personal requirements for a financial tracker — for example, the ability to split the budget into specific categories tailored to my needs, and to specify a tax amount when adding income, which is then automatically allocated to the Taxes category of the budget.
 
-
----
-
-Current Features
-
-    Web interface for tracking income, expenses, and budget management.
-
-    Data stored reliably in a MySQL database.
-
-    Interactive pages to view transaction logs and current balance.
-
-    Support for multiple expense categories with user-friendly labels.
-
-    Backend logic structured for scalability and maintainability.
-
-Architecture
-
-Budget Pet is implemented as a web-based monolithic application with:
-
-    backend built in Python handling business logic,
-
-    MySQL database for persistent storage of budget state and transactions,
-
-    web server providing interactive frontend access,
-
-    clear separation between core logic and infrastructure layers,
-
-    designed for easy future expansion and feature additions.
-
-Requirements
-
-    Python 3.11+
-
-    MySQL server
+I developed it while learning the technologies involved — including Flask, Pydantic, and relational databases.  
+The goal was not to create a production-ready or user-friendly application, but rather to explore architecture, state persistence, and backend logic.
 
 ---
 
-## Running the Database and Web API
+## 🚀 Features
 
-Before using the app, ensure your MySQL database is running and properly configured.
+- Add, edit, and delete financial transactions  
+- Transaction history overview  
+- Budget management with four custom categories: reserve, available funds, rent, and taxes — tailored for personal needs with manual adjustment capability  
+- Statistics with filters by date range, transaction type (expense, income), and categories  
+- Web interface consisting of 5 pages  
+- Data persisted in a MySQL database  
 
-To start the backend web API server, run:
+---
 
-```
-python3 -m budgetpet.web_api
-```
+## 🛠️ Tech Stack
 
-This will launch the web application locally. Open your browser and go to:
+- Python 3.10  
+- Flask  
+- MySQL  
+- PyMySQL  
+- Pydantic  
+- Jinja2 (HTML templating)  
+- JavaScript (client-side scripting)  
 
-```bash http://127.0.0.1:5000 ```
+---
 
-(Adjust the port if your server uses a different one.)
+## 🧱 Architecture Overview
+
+The project is organized into several logical layers for clarity and maintainability:
+
+- **Application** — business logic and services  
+- **Domain** — core models and interfaces  
+- **Infrastructure** — database access and logging  
+- **Interface** — web API and routing  
+
+The web frontend assets (CSS, JS, templates) are located under the `web/` folder.  
+`main.py` serves as the application entry point.
+
+---
+
+## ⚙️ Setup
+
+The project is designed to run locally with Python and a configured MySQL database.  
+Database schema is assumed to be pre-created.  
+Environment variables are used for configuration (e.g., database credentials).
+
+---
+
+## 🔒 Notes
+
+- No migration system is used; table definitions are static.  
+- The app uses a `.env` configuration file (not included in the repo).  

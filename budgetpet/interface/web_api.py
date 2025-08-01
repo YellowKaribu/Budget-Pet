@@ -42,8 +42,6 @@ def create_app(services: dict) -> Flask:
             summary = statistic_service.get_statistic(user_filters)
 
             total = sum(Decimal(row['total']) for row in summary)
-            print("Summary rows:", summary)
-            print("Total sum calculated:", total)
 
             return jsonify({
             'summary': summary,
@@ -52,7 +50,6 @@ def create_app(services: dict) -> Flask:
         except Exception as e:
             traceback.print_exc()
             return jsonify({'error': str(e)}), 500
-        
 
     @app.route('/operations-history')
     def operations_log():
