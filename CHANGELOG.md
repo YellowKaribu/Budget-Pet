@@ -1,26 +1,18 @@
 # Changelog
 
-## [0.2.1] -
+## [0.3.0] - 01-08-2025
 
-### Add
-- Monthly event processing logic via `check_monthly_events`: last month's income moved from reserve to available funds on 1, rent reset on 29, rent take from reserves on 1
-- Function `get_last_month_expense_statistic()` to calculate categorized expenses for the previous month
-- Added basic folder structure for frontend
-- Created initial HTML pages and base CSS styles
+### Added
 
-
-### Changed
-- Replaced hexagonal architecture with a flat CLI-based structure.
-- Split responsibilities between `application.py` (business logic) and `infrastructure.py` (data operations).
-- Simplified entry point: `main.py` now directly calls application logic.
-- Extracted user messages and constants into dedicated modules: `messages.py` and `constants.py`.
-- Consolidated input/output handling in `cli.py` for CLI display and prompts.
-- Refactored domain models and enums into `models.py`.
-- Reworked monthly events check and transaction orchestration logic.
-- dataclasses replaced by pydantic
+- Web interface
+- Editing and deleting transactions
+- Ability to specify a custom tax rate (instead of a fixed 20%)
+- Expense and income statistics with filters
+- Manual balance adjustment
 
 ### Removed
-- Removed ports, adapters, and abstractions from hexagonal architecture, which were unnecessary for a small CLI tool.
+- CLI interface
+- Monthly events
 
 ---
 
