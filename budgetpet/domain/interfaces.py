@@ -3,50 +3,43 @@ from budgetpet.domain.models import BudgetState, Operation
 from typing import List, Any, Dict
 from datetime import date
 from typing import Optional, Any
-import mysql.connector
 
 class IBudgetRepository(ABC):
+#Optional cursor allows open 1 database connection for multiple functions in service
     @abstractmethod
     def save_budget_state(self, state: BudgetState, cursor: Optional[Any] = None) -> None:
         pass
-
 
     @abstractmethod
     def get_current_budget_state(self, cursor: Optional[Any] = None) -> BudgetState:
         pass
 
+
 class IOperationsRepository(ABC):
-
-
     @abstractmethod
     def get_operation_history_from_db(self) -> List[Any]:
         pass
 
-
     @abstractmethod
-    def get_operation_by_id(self, operation_id: int, cursor) -> Operation:
+    def get_operation_by_id(self, operation_data: Operation, cursor: Optional[Any] = None) -> Operation:
         pass
 
     @abstractmethod
     def add_operation_history(self, operation_data: dict, cursor: Optional[Any] = None) -> None:
         pass
 
-
     @abstractmethod
-    def edit_operation(self, operation_id: int, operation_data: dict) -> None:
+    def delete_operation(self, operation_data: Operation, cursor) -> None:
         pass
 
-
     @abstractmethod
-    def delete_operation(self, operation_id: int, cursor) -> None:
+    def update_operation(self, new_data: dict, cursor) -> None:
         pass
 
 class IEventsRepository(ABC):
-
     @abstractmethod
     def get_monthly_events(self) -> List[Dict]:
         pass
-
 
     @abstractmethod
     def update_monthly_event(self, event_id: int, last_executed: date) -> None:

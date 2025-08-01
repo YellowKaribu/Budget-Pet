@@ -18,26 +18,21 @@ def create_app(services: dict) -> Flask:
     def home():
         return render_template('index.html')
 
-
     @app.route('/balance')
     def balance_page():
         return render_template('balance.html')
-    
 
     @app.route('/add_transaction')
     def add_transaction():
         return render_template('add_transaction.html')
     
-
     @app.route('/statistics')
     def statistic_page():
         return render_template('statistics.html')
 
-
     @app.route('/operations-history')
     def operations_log():
         return render_template('operations-history.html')
-
 
     @app.route('/delete_operation/<int:operation_id>', methods=["POST"])
     def delete_operation(operation_id):
@@ -48,8 +43,6 @@ def create_app(services: dict) -> Flask:
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
     
-
-
     @app.route('/budget_state.json')
     def budget_state_json():
         try:
@@ -58,7 +51,6 @@ def create_app(services: dict) -> Flask:
             return jsonify({'balance': balance.model_dump(mode='json')})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
 
     @app.route('/update_balance', methods=['POST'])
     def update_balance():
@@ -73,7 +65,6 @@ def create_app(services: dict) -> Flask:
             budget_service.logger.error(f"Error updating balance: {e}")
             return jsonify({'error': 'Update failed', 'details': str(e)}), 500
 
-
     def serialize_for_frontend(op: Operation):
         return {
             "id": op.id,
@@ -84,7 +75,6 @@ def create_app(services: dict) -> Flask:
             "operation_tax_status": float(op.tax_rate) if op.tax_rate else None,
             "operation_comment": op.comment
         }
-
 
     @app.route('/transactions.jsonl')
     def transactions_json():
@@ -98,7 +88,6 @@ def create_app(services: dict) -> Flask:
             operations_service.logger.error(f"Error fetching transactions: {e}")
             return jsonify({'error': 'Failed to fetch transactions'}), 500
 
-
     @app.route('/transactions_log')
     def transactions_log():
         try:
@@ -109,7 +98,6 @@ def create_app(services: dict) -> Flask:
             operations_service.logger.error(f"Error rendering transactions log: {e}")
             return render_template("error.html", error=str(e)), 500
 
-
     @app.route('/new_operation.json', methods=['POST'])
     def new_operation():
         json_data = request.get_json()
@@ -117,12 +105,6 @@ def create_app(services: dict) -> Flask:
             return jsonify({'error': 'No JSON data provided'}), 400
         try:
             operation_dto = OperationDTO(**json_data)
-        except ValidationError as e:
-            messages = [err['msg'] for err in e.errors()]
-            return jsonify({'error': messages[0]}), 422
-
-        
-        try:
             operation = operation_dto.to_domain()
         except ValidationError as e:
             messages = [err['msg'] for err in e.errors()]
@@ -135,5 +117,23 @@ def create_app(services: dict) -> Flask:
             return jsonify({'status': 'success'})
         except Exception as e:
             return jsonify({'error': f'Error adding operation: {str(e)}'}), 500
+
+    @app.route('/edit_operation.json', methods=['POST'])
+    def edit_operation():
+        json_data = request.get_json()
+        print(json_data)
+
+        try:
+            dto_data = OperationDTO(**json_data)
+            domain_data = dto_data.to_domain()
+        except ValidationError as e:
+            messages = [err['msg'] for err in e.errors()]
+            return jsonify({'error': messages[0]}), 422
+        try:
+            operations_service = app.config['services']['operations']
+            operations_service.edit_operation(domain_data)
+            return jsonify({'status': 'success'})
+        except Exception as e:
+            return jsonify({'error': f'Error editing operation: {str(e)}'}), 500
 
     return app

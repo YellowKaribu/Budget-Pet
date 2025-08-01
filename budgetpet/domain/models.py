@@ -67,7 +67,7 @@ class OperationDTO(BaseModel):
             return v
         if not v:
             return datetime.now()
-        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%d"):
             try:
                 return datetime.strptime(v, fmt)
             except ValueError:
